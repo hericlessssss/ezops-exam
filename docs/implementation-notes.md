@@ -128,6 +128,7 @@ Também foi incluído script de inicialização (ex.: `create.sql`) para prepara
 #### 3) Infraestrutura (Terraform)
 - **VPC**: Módulo criado com subnets públicas/privadas e NAT Gateway (Single NAT para economia). Prefixos de nome padronizados (`test-chico-*`).
 - **ECR**: Repositórios criados (`test-chico-backend`, `test-chico-frontend`) com Scan on Push e tags mutáveis (para facilitar laboratório).
+- **EKS**: Cluster Kubernetes (v1.29) com Managed Node Group (Nodes `t3.medium` privados). IAM Roles configuradas para cluster e nodes.
 
 #### 4) Frontend
 - **Compatibilidade**: O frontend usa dependências antigas (`node-sass`), exigindo **Node 14**.

@@ -26,6 +26,17 @@ module "vpc" {
 # But wait, step 4 says "Ajustar main.tf... e exportar seus outputs para uso futuro".
 # So I will keep ONLY VPC active to be safe and clean.
 
+module "eks" {
+  source = "../../modules/eks"
+
+  name_prefix         = "test-chico"
+  vpc_id              = module.vpc.vpc_id
+  subnet_ids          = module.vpc.private_subnet_ids
+  tags                = var.tags
+  cluster_version     = "1.29"
+  node_instance_types = ["t3.medium"]
+}
+
 module "ecr" {
   source = "../../modules/ecr"
 

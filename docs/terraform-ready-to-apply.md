@@ -56,6 +56,21 @@ This repository is structured for a secure, modular deployment of the EZOps Exam
     docker push <ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com/test-chico-backend:latest
     ```
 
+    docker push <ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com/test-chico-backend:latest
+    ```
+
+#### EKS Validation (Kubernetes)
+
+1.  **Update Kubeconfig**:
+    ```bash
+    aws eks update-kubeconfig --region us-east-2 --name test-chico-eks
+    ```
+2.  **Verify Cluster**:
+    ```bash
+    kubectl get nodes
+    kubectl get svc
+    ```
+
 ## Module Architecture
 
 - **vpc**: Networking foundation (Subnets, NAT Gateway).

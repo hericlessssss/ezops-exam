@@ -17,3 +17,8 @@ output "ecr_repository_urls" {
   description = "Map of ECR repository URLs"
   value       = module.ecr.repository_urls
 }
+
+output "eks_cluster_endpoint" {
+  description = "Endpoint for EKS control plane"
+  value       = module.eks.cluster_endpoint
+}
