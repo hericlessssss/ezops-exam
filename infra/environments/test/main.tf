@@ -57,4 +57,25 @@ module "ecr" {
   tags        = var.tags
 }
 
-# ... other modules commented out for clarity in this specific task ...
+module "s3_frontend" {
+  source = "../../modules/s3_frontend"
+
+  name_prefix = "test-chico"
+  tags        = var.tags
+}
+
+module "cloudfront" {
+  source = "../../modules/cloudfront"
+
+  name_prefix                 = "test-chico"
+  bucket_id                   = module.s3_frontend.bucket_id
+  bucket_arn                  = module.s3_frontend.bucket_arn
+  bucket_regional_domain_name = module.s3_frontend.bucket_regional_domain_name
+  tags                        = var.tags
+}
+
+# module "route53" {
+#   source = "../../modules/route53"
+#   domain_name = "example.com"
+#   tags        = var.tags
+# }

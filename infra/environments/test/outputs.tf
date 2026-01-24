@@ -27,3 +27,9 @@ output "rds_endpoint" {
   description = "RDS Endpoint"
   value       = module.rds.db_endpoint
 }
+
+output "frontend_cloudfront_domain" {
+  description = "CloudFront Domain Name"
+  value       = module.cloudfront.distribution_domain_name
+}
+

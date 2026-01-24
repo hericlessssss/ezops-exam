@@ -85,6 +85,26 @@ This repository is structured for a secure, modular deployment of the EZOps Exam
     nc -zv <RDS_ENDPOINT> 5432
     ```
 
+    nc -zv <RDS_ENDPOINT> 5432
+    ```
+
+#### Frontend Deployment
+
+1.  **Build**:
+    ```bash
+    cd frontend-app
+    npm install && npm run build
+    ```
+2.  **Deploy to S3**:
+    ```bash
+    aws s3 sync build/ s3://<BUCKET_NAME> --delete
+    ```
+3.  **Invalidate Cache**:
+    ```bash
+    aws cloudfront create-invalidation --distribution-id <DIST_ID> --paths "/*"
+    ```
+4.  **Validate**: Access `https://<CLOUDFRONT_DOMAIN>`
+
 ## Module Architecture
 
 - **vpc**: Networking foundation (Subnets, NAT Gateway).
