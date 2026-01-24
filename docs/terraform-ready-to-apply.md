@@ -71,6 +71,20 @@ This repository is structured for a secure, modular deployment of the EZOps Exam
     kubectl get svc
     ```
 
+    kubectl get svc
+    ```
+
+#### RDS Validation
+
+1.  **Check Endpoint**:
+    ```bash
+    aws rds describe-db-instances --query 'DBInstances[*].Endpoint.Address' --profile hrclsfss
+    ```
+2.  **Test Connectivity** (Requires a pod/instance inside VPC/Cluster):
+    ```bash
+    nc -zv <RDS_ENDPOINT> 5432
+    ```
+
 ## Module Architecture
 
 - **vpc**: Networking foundation (Subnets, NAT Gateway).

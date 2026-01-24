@@ -37,6 +37,18 @@ module "eks" {
   node_instance_types = ["t3.medium"]
 }
 
+module "rds" {
+  source = "../../modules/rds"
+
+  name_prefix                = "test-chico"
+  vpc_id                     = module.vpc.vpc_id
+  subnet_ids                 = module.vpc.private_subnet_ids
+  tags                       = var.tags
+  db_name                    = "blog"
+  username                   = "postgres"
+  allowed_security_group_ids = [module.eks.cluster_security_group_id]
+}
+
 module "ecr" {
   source = "../../modules/ecr"
 
