@@ -1,0 +1,106 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    paths:
+      - 'apps/frontend/**'
+      - '.github/workflows/frontend.yml'
+  pull_request:
+    branches: [ "main", "master" ]
+    paths:
+      - 'apps/frontend/**'
+
+env:
+  AWS_REGION: us-east-2
+  DIST_DIR: apps/frontend/dist
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  # Job 1: Build (Runs on PRs and Push)
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./apps/frontend
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '14'
+        cache: 'npm'
+        cache-dependency-path: apps/frontend/package-lock.json
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Build
+      run: npm run build
+
+    # Persist dist folder for the deploy job
+    - name: Upload Build Artifact
+      # Only upload if this is a push event, to save time/space on PRs
+      # Or strict necessity for the next job
+      if: ${{ github.event_name == 'push' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-dist
+        path: apps/frontend/dist
+        retention-days: 1
+
+  # Job 2: Deploy (Runs only on Push to Main/Master)
+  deploy:
+    name: Deploy to S3
+    needs: build
+    # Ensure this runs only on push to main branches
+    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+    runs-on: ubuntu-latest
+    environment: test
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Download Build Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: frontend-dist
+        path: apps/frontend/dist
+
+    # 1. Authentication (Fallback Logic)
+    - name: Configure AWS Credentials (OIDC)
+      if: ${{ secrets.AWS_ROLE_ARN != '' }}
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Configure AWS Credentials (Access Keys)
+      if: ${{ secrets.AWS_ROLE_ARN == '' }}
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ env.AWS_REGION }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    # 2. Sync to S3
+    - name: Sync to S3
+      env:
+        S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+      run: |
+        aws s3 sync apps/frontend/dist/ s3://$S3_BUCKET --delete
+
+    # 3. Invalidate CloudFront
+    - name: Invalidate CloudFront Cache
+      env:
+        CLOUDFRONT_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+      run: |
+        aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_ID --paths "/*"
