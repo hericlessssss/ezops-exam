@@ -26,12 +26,12 @@ module "vpc" {
 # But wait, step 4 says "Ajustar main.tf... e exportar seus outputs para uso futuro".
 # So I will keep ONLY VPC active to be safe and clean.
 
-/*
 module "ecr" {
   source = "../../modules/ecr"
-  repo_names = ["ezops-backend", "ezops-frontend"]
-  tags       = var.tags
+
+  name_prefix = "test-chico"
+  repo_names  = ["backend", "frontend"]
+  tags        = var.tags
 }
-*/
 
 # ... other modules commented out for clarity in this specific task ...

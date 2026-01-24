@@ -41,6 +41,21 @@ This repository is structured for a secure, modular deployment of the EZOps Exam
     terraform apply "tfplan"
     ```
 
+  - **backend**: `test-chico-backend`
+  - **frontend**: `test-chico-frontend`
+
+#### How to Push Images
+
+1.  **Authenticate**:
+    ```bash
+    aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin <ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com
+    ```
+2.  **Tag & Push**:
+    ```bash
+    docker tag ezops-backend:latest <ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com/test-chico-backend:latest
+    docker push <ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com/test-chico-backend:latest
+    ```
+
 ## Module Architecture
 
 - **vpc**: Networking foundation (Subnets, NAT Gateway).

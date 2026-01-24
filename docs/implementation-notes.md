@@ -125,7 +125,11 @@ Também foi incluído script de inicialização (ex.: `create.sql`) para prepara
     - Adicionado `HEALTHCHECK` no Dockerfile usando `wget` (compatível com Alpine).
     - Objetivo: Melhorar preparação para Kubernetes (EKS).
 
-#### 2) Frontend
+#### 3) Infraestrutura (Terraform)
+- **VPC**: Módulo criado com subnets públicas/privadas e NAT Gateway (Single NAT para economia). Prefixos de nome padronizados (`test-chico-*`).
+- **ECR**: Repositórios criados (`test-chico-backend`, `test-chico-frontend`) com Scan on Push e tags mutáveis (para facilitar laboratório).
+
+#### 4) Frontend
 - **Compatibilidade**: O frontend usa dependências antigas (`node-sass`), exigindo **Node 14**.
 - **Docker**: Build multi-stage (`Node 14` → `Nginx`).
 - **Observação**: Node 14 é EOL (End of Life). Documentado como melhoria futura.
