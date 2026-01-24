@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: test-chico
+data:
+  # PLACEHOLDERS: Replace with Terraform RDS outputs
+  DB_HOST: "placeholder-rds-endpoint"
+  DB_PORT: "5432"
+  DB_NAME: "blog"
+  # Application settings
+  NODE_ENV: "production"
