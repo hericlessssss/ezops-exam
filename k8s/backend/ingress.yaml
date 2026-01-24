@@ -11,8 +11,9 @@ metadata:
     alb.ingress.kubernetes.io/healthcheck-path: /health
 spec:
   rules:
-    - host: api.test-chico.example.com
-      http:
+    # Hostless (Wildcard) Rule to allow matching any Host header.
+    # This enables DNS to be managed strictly via Route53 without constantly patching this file.
+    - http:
         paths:
           - path: /
             pathType: Prefix

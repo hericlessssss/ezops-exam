@@ -57,15 +57,21 @@ variable "tags" {
 }
 
 variable "hosted_zone_id" {
-  description = "Route53 Hosted Zone ID"
+  description = "Route53 Hosted Zone ID for exam.ezopscloud.tech"
   type        = string
-  default     = "Z00000000000000000000" # Placeholder
+  default     = "" # Must be provided via tfvars or -var
 }
 
-variable "domain_name" {
-  description = "Domain Name"
+variable "exam_domain" {
+  description = "Base domain provided by the exam"
   type        = string
-  default     = "example.com" # Placeholder
+  default     = "exam.ezopscloud.tech"
+}
+
+variable "dns_label" {
+  description = "Student Name/Label for subdomain (e.g., chico)"
+  type        = string
+  default     = "chico"
 }
 variable "backend_target" {
   description = "ALB DNS Name for Backend (Post-Deploy)"

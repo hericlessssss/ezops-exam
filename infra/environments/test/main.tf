@@ -77,8 +77,9 @@ module "cloudfront" {
 module "route53" {
   source = "../../modules/route53"
 
-  hosted_zone_id  = var.hosted_zone_id
-  domain_name     = var.domain_name
+  hosted_zone_id = var.hosted_zone_id
+  # Standardized: <dns_label>.<exam_domain> (e.g. chico.exam.ezopscloud.tech)
+  domain_name     = "${var.dns_label}.${var.exam_domain}"
   frontend_target = module.cloudfront.distribution_domain_name
   backend_target  = var.backend_target != "" ? var.backend_target : "placeholder-alb-dns.us-east-2.elb.amazonaws.com"
   tags            = var.tags
