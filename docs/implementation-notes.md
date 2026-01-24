@@ -131,6 +131,7 @@ Também foi incluído script de inicialização (ex.: `create.sql`) para prepara
 - **EKS**: Cluster Kubernetes (v1.29) com Managed Node Group (Nodes `t3.medium` privados). IAM Roles configuradas para cluster e nodes.
 - **RDS**: Banco PostgreSQL 15 (`db.t3.micro`) privado. Segurança: Acesso restrito ao Security Group do Cluster EKS apenas.
 - **Frontend**: Hospedagem serverless via **S3 (Privado)** + **CloudFront (OAC)**. Suporte a SPA (fallback 404 -> index.html) e HTTPS global.
+- **Route53**: Gerenciamento de DNS para `app.domain` (Frontend/CloudFront) e `api.domain` (Backend/ALB). Backend aponta para placeholder até o ALB ser provisionado.
 
 #### 4) Frontend
 - **Compatibilidade**: O frontend usa dependências antigas (`node-sass`), exigindo **Node 14**.

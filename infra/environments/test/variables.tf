@@ -55,3 +55,15 @@ variable "tags" {
     Env     = "test"
   }
 }
+
+variable "hosted_zone_id" {
+  description = "Route53 Hosted Zone ID"
+  type        = string
+  default     = "Z00000000000000000000" # Placeholder
+}
+
+variable "domain_name" {
+  description = "Domain Name"
+  type        = string
+  default     = "example.com" # Placeholder
+}

@@ -105,6 +105,22 @@ This repository is structured for a secure, modular deployment of the EZOps Exam
     ```
 4.  **Validate**: Access `https://<CLOUDFRONT_DOMAIN>`
 
+    aws cloudfront create-invalidation --distribution-id <DIST_ID> --paths "/*"
+    ```
+4.  **Validate**: Access `https://<CLOUDFRONT_DOMAIN>`
+
+#### Route53 Configuration
+
+1.  **Get Hosted Zone ID**:
+    ```bash
+    aws route53 list-hosted-zones --profile hrclsfss
+    ```
+2.  **Update `infra/environments/test/variables.tf`**:
+    *   Set `hosted_zone_id` = "YOUR_ZONE_ID"
+    *   Set `domain_name` = "yourdomain.com"
+3.  **Update Backend Target (Post-Apply)**:
+    *   Once ALB is created (via Kubernetes Ingress), update `backend_target` in `infra/environments/test/main.tf` with the actual ALB DNS name.
+
 ## Module Architecture
 
 - **vpc**: Networking foundation (Subnets, NAT Gateway).

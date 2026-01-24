@@ -74,8 +74,12 @@ module "cloudfront" {
   tags                        = var.tags
 }
 
-# module "route53" {
-#   source = "../../modules/route53"
-#   domain_name = "example.com"
-#   tags        = var.tags
-# }
+module "route53" {
+  source = "../../modules/route53"
+
+  hosted_zone_id  = var.hosted_zone_id
+  domain_name     = var.domain_name
+  frontend_target = module.cloudfront.distribution_domain_name
+  backend_target  = "placeholder-alb-dns-name.us-east-2.elb.amazonaws.com" # Placeholder
+  tags            = var.tags
+}
