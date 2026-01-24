@@ -67,3 +67,8 @@ variable "domain_name" {
   type        = string
   default     = "example.com" # Placeholder
 }
+variable "backend_target" {
+  description = "ALB DNS Name for Backend (Post-Deploy)"
+  type        = string
+  default     = "" # Initially empty, filled after K8s Ingress deploy
+}

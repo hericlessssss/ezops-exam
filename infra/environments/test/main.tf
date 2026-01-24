@@ -80,7 +80,7 @@ module "route53" {
   hosted_zone_id  = var.hosted_zone_id
   domain_name     = var.domain_name
   frontend_target = module.cloudfront.distribution_domain_name
-  backend_target  = "placeholder-alb-dns-name.us-east-2.elb.amazonaws.com" # Placeholder
+  backend_target  = var.backend_target != "" ? var.backend_target : "placeholder-alb-dns.us-east-2.elb.amazonaws.com"
   tags            = var.tags
 }
 
