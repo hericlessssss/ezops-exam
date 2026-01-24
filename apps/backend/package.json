@@ -2,8 +2,9 @@
   "name": "rest_api_2",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server/server.js",
   "scripts": {
+    "start": "node server/server.js",
     "test": "jest --env node --detectOpenHandles"
   },
   "author": "",

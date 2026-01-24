@@ -2,6 +2,11 @@ const express = require('express');
 const app = express();
 
 app.use(express.json());
+
+app.get('/health', (req, res) => {
+	res.status(200).send('OK');
+});
+
 app.use('/', require('./route/postsRoute'));
 app.use(function (error, req, res, next) {
 	if (error.message === 'Post already exists') {
