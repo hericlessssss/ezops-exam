@@ -28,6 +28,7 @@ Foram criados os esqueletos (interfaces) para todos os componentes exigidos:
 - **EKS vs ECS**: Optei por preparar o módulo **EKS**, pois é a recomendação para pontuar competência em Kubernetes na prova.
 - **State Remoto**: Configurado para ser bloqueado via DynamoDB para evitar corrupção em aplicações simultâneas.
 - **Networking**: Módulo VPC preparado para receber `cidr_block` como variável, facilitando criação de novos ambientes (ex.: `staging`, `prod`) sem conflito.
+- **NAT Gateway**: Adotada estratégia **Single NAT Gateway** (em uma subnet pública) para economizar custos durante a prova/dev. Em produção real, seria recomendado Multi-AZ NAT (um por AZ). Todas as subnets privadas roteiam para este único NAT.
 
 ### 3. Como Validar (Checklist)
 Assim que as permissões AWS forem liberadas:
