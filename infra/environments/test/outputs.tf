@@ -33,3 +33,8 @@ output "frontend_cloudfront_domain" {
   value       = module.cloudfront.distribution_domain_name
 }
 
+output "alb_controller_role_arn" {
+  description = "IAM Role ARN for AWS Load Balancer Controller"
+  value       = module.eks.alb_controller_role_arn
+}
+

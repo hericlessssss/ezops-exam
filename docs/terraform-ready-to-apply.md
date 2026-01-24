@@ -65,9 +65,12 @@ This repository is structured for a secure, modular deployment of the EZOps Exam
     ```bash
     aws eks update-kubeconfig --region us-east-2 --name test-chico-eks
     ```
-2.  **Verify Cluster**:
+2.  **Install Load Balancer Controller**:
+    See detailed guide: [AWS Load Balancer Controller Setup](alb-controller-setup.md).
+3.  **Verify Cluster**:
     ```bash
     kubectl get nodes
+
     kubectl get svc
     ```
 
