@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const migrationService = require('./service/migrationService');
 
+const cookieParser = require('cookie-parser');
+
 const app = express();
 
 // Configurable CORS
@@ -9,15 +11,20 @@ const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS ? process.env.CORS_ALLOW
 app.use(cors({
 	origin: allowedOrigins,
 	methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-	allowedHeaders: ['Content-Type', 'Authorization']
+	allowedHeaders: ['Content-Type', 'Authorization'],
+	credentials: true
 }));
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.get('/health', (req, res) => {
 	res.status(200).send('OK');
 });
 
+// Routes
+app.use('/auth', require('./route/authRoute'));
+app.use('/users', require('./route/usersRoute'));
 app.use('/', require('./route/postsRoute'));
 app.use(function (error, req, res, next) {
 	if (error.message === 'Post already exists') {

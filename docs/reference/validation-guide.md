@@ -54,3 +54,14 @@ Você deve ver as mesmas mensagens de `[Migration]` do teste local.
 Acesse via browser ou curl:
 https://api-ezops.gratianovem.com.br/health
 **Resposta**: "OK"
+
+### D. Validar Autenticação (Novo)
+Teste o login com o usuário padrão via console do navegador (Network tab) ao tentar logar no Frontend ou via curl:
+```bash
+curl -X POST https://api-ezops.gratianovem.com.br/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@ezops.com", "password":"password123"}'
+```
+**Resposta Esperada**:
+> Status 200 OK
+> JSON: `{ "data": { "accessToken": "..." } }`

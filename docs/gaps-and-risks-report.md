@@ -1,28 +1,39 @@
-# Gaps & Risks Report
+# 📊 Relatório de Gaps & Riscos (QA Staging)
 
-Based on the audit against the Exam PDF.
+## 🚨 P0 - Bloqueadores Críticos (Impedem o fluxo principal)
 
-## 1. Domain Naming Violation (HIGH)
-- **Problem**: Current config uses `example.com` placeholders and `test-chico` subdomain hardcoded logic.
-- **Requirement**: "Link to access... ex: `<your-name>.exam.ezopscloud.tech`".
-- **Risk**: Automatic fail for not following the naming convention or leaving placeholders.
-- **Fix**:
-  - Introduce `exam_domain` variable (`exam.ezopscloud.tech`).
-  - Introduce `dns_label` variable (`chico`).
-  - Standardize FQDN: `chico.exam.ezopscloud.tech` (or `api.chico...`).
+### 1. Sistema de Login Inexistente no Backend
+*   **Sintoma**: O usuário tenta logar, recebe erro 404 (Not Found) ou CORS error (antes da correção).
+*   **Causa**: O Frontend possui telas e serviços para Autenticação (`/auth/login`, `/auth/refresh-tokens`) e Usuários (`/users/current`), mas o **Backend não possui essas rotas**.
+*   **Impacto**: Impossível acessar áreas privadas ou identificar autor do post.
+*   **Recomendação**: Implementar módulo de Auth (JWT) ou Remover Login do Frontend (deixando aberto).
 
-## 2. Ingress Host Hardcoding (MED)
-- **Problem**: `ingress.yaml` has `host: api.test-chico.example.com`.
-- **Requirement**: Must align with the Route53 domain.
-- **Risk**: Ingress won't route traffic if host header doesn't match.
-- **Fix**: Use "Hostless Ingress" (remove strict host rule) to allow the ALB to accept traffic from the DNS record created by Terraform, avoiding circular dependency or manual editing.
+### 2. Rota `/users/current` Inexistente
+*   **Sintoma**: Ao carregar a aplicação, o Frontend tenta buscar o usuário logado (`GET /users/current`) e falha.
+*   **Impacto**: O Frontend assume que o usuário está deslogado ou quebra o carregamento do perfil.
 
-## 3. ELB Provisioning Interpretability (LOW)
-- **Problem**: The PDF asks to "Provision... ELB" with Terraform. We use EKS + ALB Controller (which provisions ALB via API, not directly via Terraform resource `aws_lb`).
-- **Risk**: Avaliador might expect `resource "aws_lb"` in main.tf.
-- **Fix**: Explicitly document that "Modern Best Practice" for EKS is using the Controller, and that the Controller IS provisioned via Terraform (Chart/IRSA). This is a defensible technical choice.
+## ⚠️ P1 - Funcionalidade Limitada
 
-## 4. Documentation Language (LOW)
-- **Problem**: Some logic verified in PT-BR conversations.
-- **Requirement**: Deliverables are config files, but clarity/org is graded.
-- **Fix**: Ensure `README.md` and `docs/*` are strictly EN for the "Evaluate" deliverables, saving PT-BR only for context summary.
+### 3. Filtro de Posts por Usuário
+*   **Análise**: O serviço `PostsService.getPostsByUserId` envia parâmetros de filtro. O Backend (`postsRoute.js`) precisa estar preparado para ler `req.query` e filtrar no SQL.
+*   **Status**: A verificar no código atual (`postsRoute.js`).
+
+## ✅ Correções Já Realizadas (Stabilization)
+
+### 1. Migrations & Seeding (Resolvido)
+*   **Problema Anterior**: Banco subia vazio e exigia comando manual.
+*   **Solução Atual**: O Backend agora possui um `migrationService` que roda **automático no startup**, de forma idempotente (`IF NOT EXISTS`). O DB sobe pronto para uso.
+
+### 2. CORS & Segurança (Resolvido)
+*   **Problema Anterior**: Erros de CORS bloqueavam o Frontend. Conexão DB sem SSL falhava na AWS.
+*   **Solução Atual**:
+    *   CORS configurado para aceitar Credenciais e Origens via Env Var (`CORS_ALLOWED_ORIGINS`).
+    *   Conexão DB agora usa SSL (`rejectUnauthorized: false`).
+    *   Timeouts de Liveness aumentados para evitar crash loops durante migração.
+
+---
+
+## 📝 Próximos Passos Sugeridos
+
+1.  **Imediato**: Deploy das correções de Migrations/CORS (que já estão prontas no seu repo local).
+2.  **Decisão de Negócio**: Definir se implementamos o "Login Real" no backend (estimativa: 2-4 horas) ou se removemos o Login do Frontend.
