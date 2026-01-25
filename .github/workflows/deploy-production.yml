@@ -25,6 +25,7 @@ jobs:
   build-push-backend:
     name: Build & Push Backend
     runs-on: ubuntu-latest
+    environment: production
     outputs:
       image: ${{ steps.build-image.outputs.image }}
     steps:
