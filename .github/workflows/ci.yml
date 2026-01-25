@@ -126,12 +126,14 @@ jobs:
 
       # K8s Validation (Kubeconform)
       - name: Kubeconform (K8s Manifests)
-        uses: actions/kubeconform-action@v2.0.0
-        with:
-          location: "k8s/staging"
-          schema_location: "default"
-          strict: true
-          output: text
+      - name: Install Kubeconform
+        run: |
+          wget https://github.com/yannh/kubeconform/releases/download/v0.6.6/kubeconform-linux-amd64.tar.gz
+          tar -xf kubeconform-linux-amd64.tar.gz
+          sudo mv kubeconform /usr/local/bin/
+
+      - name: Kubeconform (K8s Manifests)
+        run: kubeconform -strict -summary -output text k8s/staging/
 
   # =================================================================================
   # SECURITY SCANNING (Gitleaks)
