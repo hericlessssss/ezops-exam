@@ -7,6 +7,9 @@ create table if not exists blog.post (
 	date timestamp default now()
 );
 
+-- Safely add author_id if it does not exist (Postgres 9.6+)
+alter table blog.post add column if not exists author_id integer;
+
 create table if not exists blog.users (
 	id serial primary key,
 	name text not null,

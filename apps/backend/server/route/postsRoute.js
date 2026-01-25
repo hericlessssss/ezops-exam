@@ -4,7 +4,18 @@ const postsService = require('../service/postsService');
 
 router.get('/posts', async function (req, res, next) {
 	try {
-		const posts = await postsService.getPosts();
+		// Frontend sends ?filter[userId]=1 due to qs.stringify
+		const filter = {};
+
+		// Parse req.query['filter[userId]'] OR req.query.filter object if body-parser/qs extended is on
+		// Express 'query parser' default is 'extended' (qs library), so nested objects work.
+		// Let's assume req.query.filter.userId exists if sent.
+
+		if (req.query.filter && req.query.filter.userId) {
+			filter.author_id = req.query.filter.userId;
+		}
+
+		const posts = await postsService.getPosts(filter);
 		res.set('x-total-count', posts.length);
 		res.json({ data: posts });
 	} catch (e) {

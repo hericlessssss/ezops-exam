@@ -1,7 +1,7 @@
 const postsData = require('../data/postsData');
 
-exports.getPosts = function () {
-	return postsData.getPosts();
+exports.getPosts = function (filter) {
+	return postsData.getPosts(filter);
 };
 
 exports.getPost = async function (id) {
