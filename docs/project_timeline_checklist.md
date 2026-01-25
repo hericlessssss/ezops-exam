@@ -1,0 +1,46 @@
+# Project Timeline Checklist
+
+Marco 1: Discovery & Analysis
+- Mapeamento da estrutura do Monorepo (Apps + Infra)
+- Identificação da stack Backend (Node/Express/Postgres) e Frontend (Vue 2)
+- Análise de manifests Kubernetes (Staging/Production)
+- Análise de workflows GitHub Actions
+- Identificação de Tech Debt e relatórios de risco (Gaps de Auth e Infra)
+- Diagnóstico de falhas de conexão de banco e loop de reinicialização
+
+Marco 2: Backend Stabilization & Infrastructure
+- Implementação de lógica de Migração Idempotente (Startup Service)
+- Configuração de conexão SSL para PostgreSQL (RDS)
+- Refatoração de Credenciais de Banco para Variáveis de Ambiente
+- Correção de Configuração CORS (Credentials + Origin Reflection)
+- Ajuste de Probes Liveness/Readiness no Kubernetes (Aumento de Timeouts)
+- Criação de endpoint de Health Check implícito
+
+Marco 3: Security Implementation (Authentication P0)
+- Modelagem e criação da tabela Users no Schema
+- Implementação de Hash de Senha (bcrypt) e Tokenização (JWT)
+- Desenvolvimento do AuthService (Backend)
+- Criação do Middleware de Autenticação (AuthMiddleware.js)
+- Criação da Rota de Login (POST /login)
+- Seed Inicial de Usuário Administrador
+- Integração do Frontend com Lógica de Autenticação
+- Validação de fluxo de login local
+
+Marco 4: Content & Feature Expansion (News/Hello)
+- Criação de lógica de filtro de posts por AuthorID
+- Seeding de Conteúdo de Marketing (Posts Iniciais)
+- Atualização de Posts para Suporte a HTML Rico e Imagens
+- Implementação de rota de API padronizada ({ data: content })
+- Criação da HelloPage.vue e Rota /hello
+- Correção de Links no Menu (Dropdown)
+- Redesign completo da NewsPage.vue (Layout Cards + CSS Scoped)
+- Correção de Linter (ESLint) no código Vue
+
+Marco 5: CI/CD & Deployment Optimization
+- Correção de compatibilidade Windows no package.json (NODE_ENV)
+- Sincronização de package-lock.json para Build na CI
+- Configuração de Frontend Local para uso de API Remota (.env.local)
+- Implementação de Estratégia de Cache Split no S3 (Assets vs HTML)
+- Habilitação explícita de filenameHashing no vue.config.js
+- Forçamento de ambiente de Produção no build de Staging
+- Invalidação de Cache CloudFront e verificação de deploy

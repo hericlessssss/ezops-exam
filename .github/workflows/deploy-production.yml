@@ -1,0 +1,159 @@
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-2
+  ECR_REPOSITORY: prod-chico-backend
+  EKS_CLUSTER_NAME: prod-chico-eks
+  DEPLOYMENT_NAME: ezops-backend
+  CONTAINER_NAME: backend
+  NAMESPACE: prod-chico
+  S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }} # Prod Bucket
+
+jobs:
+  # =================================================================================
+  # BACKEND DEPLOY
+  # =================================================================================
+  build-push-backend:
+    name: Build & Push Backend
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.build-image.outputs.image }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Build and Push
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        working-directory: ./apps/backend
+        run: |
+          # Tag as Latest Prod
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Trivy Image Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.build-image.outputs.image }}
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: 1 # Block production deploy on vulnerabilities
+
+  deploy-backend-k8s:
+    name: Deploy Backend K8s
+    needs: build-push-backend
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update Kubeconfig
+        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Deploy to EKS
+        env:
+          IMAGE_URI: ${{ needs.build-push-backend.outputs.image }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        run: |
+          # Apply ConfigMaps & Secrets & Deployments
+          kubectl apply -f k8s/production/namespace.yaml
+          kubectl apply -f k8s/production/backend/configmap.yaml
+          
+          kubectl create secret generic backend-secrets \
+            --namespace ${{ env.NAMESPACE }} \
+            --from-literal=DB_HOST="$DB_HOST" \
+            --from-literal=DB_NAME="$DB_NAME" \
+            --from-literal=DB_PORT="$DB_PORT" \
+            --from-literal=DB_USER="$DB_USER" \
+            --from-literal=DB_PASSWORD="$DB_PASSWORD" \
+            --from-literal=JWT_SECRET="$JWT_SECRET" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          kubectl apply -f k8s/production/backend/deployment.yaml
+          kubectl apply -f k8s/production/backend/service.yaml
+          kubectl apply -f k8s/production/backend/ingress.yaml
+          
+          # Force Image Update
+          kubectl set image deployment/$DEPLOYMENT_NAME -n ${{ env.NAMESPACE }} $CONTAINER_NAME=$IMAGE_URI
+          kubectl rollout status deployment/$DEPLOYMENT_NAME -n ${{ env.NAMESPACE }}
+
+  # =================================================================================
+  # FRONTEND DEPLOY
+  # =================================================================================
+  deploy-frontend:
+    name: Deploy Frontend (S3)
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/frontend/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./apps/frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: ./apps/frontend
+        run: npm run build -- --mode production
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sync Assets (Cache Forever)
+        run: |
+          aws s3 sync apps/frontend/dist/ s3://$S3_BUCKET --exclude "index.html" --exclude "service-worker.js" --delete --cache-control "max-age=31536000,public,immutable"
+      
+      - name: Sync HTML (No Cache)
+        run: |
+          aws s3 sync apps/frontend/dist/ s3://$S3_BUCKET --exclude "*" --include "index.html" --include "service-worker.js" --cache-control "max-age=0,no-cache,no-store,must-revalidate"
+
+      - name: Invalidate CloudFront
+        env:
+          CLOUDFRONT_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_ID --paths "/*"

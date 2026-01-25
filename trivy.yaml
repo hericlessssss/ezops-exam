@@ -1,0 +1,6 @@
+timeout: 10m
+format: table
+severity:
+  - CRITICAL
+  - HIGH
+ignore-unfixed: true

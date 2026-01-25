@@ -1,0 +1,150 @@
+name: CI - Quality & Security
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write # For upload-sarif
+
+jobs:
+  # =================================================================================
+  # BACKEND CHECKS
+  # =================================================================================
+  backend-quality:
+    name: Backend (Lint/Test/Audit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./apps/backend
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/backend/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Lint Code (ESLint)
+        run: npm run lint
+        
+      - name: Unit Tests
+        run: npm test
+
+      - name: Security Audit (Deps)
+        # Audit fail on High/Critical only
+        run: npm audit --audit-level=high
+
+  backend-docker-lint:
+    name: Backend Dockerfile Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: apps/backend/Dockerfile
+          failure-threshold: error
+          ignore: DL3008,DL3018 # Ignore apt-get pin version warning if valid
+
+  # =================================================================================
+  # FRONTEND CHECKS
+  # =================================================================================
+  frontend-quality:
+    name: Frontend (Lint/Build/Audit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./apps/frontend
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/frontend/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Lint Code (ESLint)
+        run: npm run lint
+
+      - name: Build Dry-Run (Verification)
+        run: npm run build -- --mode production
+
+      - name: Security Audit (Deps)
+        run: npm audit --audit-level=high
+
+  # =================================================================================
+  # INFRASTRUCTURE CHECKS (Terraform + K8s)
+  # =================================================================================
+  infra-quality:
+    name: Infra & K8s Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Secrets Scanning (Trivy fs)
+      - name: Secret Scanning (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          trivy-config: trivy.yaml
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+
+      # Terraform Validation (Staging)
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      
+      - name: Terraform Fmt Check
+        run: terraform fmt -check -recursive infra/
+
+      - name: Terraform Validate (Staging)
+        working-directory: ./infra/environments/staging
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      # K8s Validation (Kubeconform)
+      - name: Kubeconform (K8s Manifests)
+        uses: actions/kubeconform-action@v2.0.0
+        with:
+          location: "k8s/staging"
+          schema_location: "default"
+          strict: true
+          output: text
+
+  # =================================================================================
+  # SECURITY SCANNING (Gitleaks)
+  # =================================================================================
+  gitleaks:
+    name: Gitleaks Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
