@@ -37,12 +37,16 @@ app.use(function (error, req, res, next) {
   res.status(500).send(error.message)
 })
 
-// Start Server strictly after DB connection and migration
-migrationService.runMigrations().then(() => {
-  app.listen(3000, () => {
-    console.log('Server running on port 3000')
+if (require.main === module) {
+  // Start Server strictly after DB connection and migration
+  migrationService.runMigrations().then(() => {
+    app.listen(3000, () => {
+      console.log('Server running on port 3000')
+    })
+  }).catch(err => {
+    console.error('Failed to run migrations', err)
+    process.exit(1)
   })
-}).catch(err => {
-  console.error('Failed to run migrations', err)
-  process.exit(1)
-})
+}
+
+module.exports = app

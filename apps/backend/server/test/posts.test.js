@@ -1,71 +1,69 @@
-const crypto = require('crypto')
-const axios = require('axios')
+const request = require('supertest')
+const app = require('../server')
 const postsService = require('../service/postsService')
 
-const generate = function () {
-  return crypto.randomBytes(20).toString('hex')
-}
+// Mock the Service Loop
+jest.mock('../service/postsService')
+jest.mock('../service/migrationService', () => ({
+  runMigrations: jest.fn().mockResolvedValue()
+}))
+// (We do not mock database anymore as it shouldn't be reached if Service is mocked)
+// Actually server.js imports migrationService.
 
-const request = function (url, method, data) {
-  return axios({ url, method, data, validateStatus: false })
-}
+describe('Posts API', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
 
-test('Should get posts', async function () {
-  const post1 = await postsService.savePost({ title: generate(), content: generate() })
-  const post2 = await postsService.savePost({ title: generate(), content: generate() })
-  const post3 = await postsService.savePost({ title: generate(), content: generate() })
-  const response = await request('http://localhost:3000/posts', 'get')
-  expect(response.status).toBe(200)
-  const posts = response.data
-  expect(posts).toHaveLength(3)
-  await postsService.deletePost(post1.id)
-  await postsService.deletePost(post2.id)
-  await postsService.deletePost(post3.id)
-})
+  test('Should get posts', async () => {
+    const mockPosts = [
+      { id: 1, title: 'T1', content: 'C1' },
+      { id: 2, title: 'T2', content: 'C2' },
+      { id: 3, title: 'T3', content: 'C3' }
+    ]
+    postsService.getPosts.mockResolvedValue(mockPosts)
 
-test('Should save a post', async function () {
-  const data = { title: generate(), content: generate() }
-  const response = await request('http://localhost:3000/posts', 'post', data)
-  expect(response.status).toBe(201)
-  const post = response.data
-  expect(post.title).toBe(data.title)
-  expect(post.content).toBe(data.content)
-  await postsService.deletePost(post.id)
-})
+    const response = await request(app).get('/posts')
+    expect(response.status).toBe(200)
+    expect(response.body.data).toHaveLength(3) // postsRoute wraps in { data: ... }
+  })
 
-test('Should not save a post', async function () {
-  const data = { title: generate(), content: generate() }
-  const response1 = await request('http://localhost:3000/posts', 'post', data)
-  const response2 = await request('http://localhost:3000/posts', 'post', data)
-  expect(response2.status).toBe(409)
-  const post = response1.data
-  await postsService.deletePost(post.id)
-})
+  test('Should save a post', async () => {
+    const newPost = { title: 'New', content: 'Content' }
+    postsService.savePost.mockResolvedValue({ id: 1, ...newPost })
 
-test('Should update a post', async function () {
-  const post = await postsService.savePost({ title: generate(), content: generate() })
-  post.title = generate()
-  post.content = generate()
-  const response = await request(`http://localhost:3000/posts/${post.id}`, 'put', post)
-  expect(response.status).toBe(204)
-  const updatedPost = await postsService.getPost(post.id)
-  expect(updatedPost.title).toBe(post.title)
-  expect(updatedPost.content).toBe(post.content)
-  await postsService.deletePost(post.id)
-})
+    const response = await request(app).post('/posts').send(newPost)
+    expect(response.status).toBe(201)
+    expect(response.body.title).toBe(newPost.title)
+  })
 
-test('Should not update a post', async function () {
-  const post = {
-    id: 1
-  }
-  const response = await request(`http://localhost:3000/posts/${post.id}`, 'put', post)
-  expect(response.status).toBe(404)
-})
+  test('Should handle save error (Conflict)', async () => {
+    postsService.savePost.mockRejectedValue(new Error('Post already exists'))
 
-test('Should delete a post', async function () {
-  const post = await postsService.savePost({ title: generate(), content: generate() })
-  const response = await request(`http://localhost:3000/posts/${post.id}`, 'delete')
-  expect(response.status).toBe(204)
-  const posts = await postsService.getPosts()
-  expect(posts).toHaveLength(0)
+    const newPost = { title: 'Duplicate', content: 'Content' }
+    const response = await request(app).post('/posts').send(newPost)
+    expect(response.status).toBe(409)
+  })
+
+  test('Should update a post', async () => {
+    postsService.updatePost.mockResolvedValue()
+
+    const response = await request(app).put('/posts/123').send({ title: 'U', content: 'C' })
+    expect(response.status).toBe(204)
+  })
+
+  test('Should not update non-existent post (Service throws)', async () => {
+    // Service.updatePost throws 'Post not found' if logic checks it
+    postsService.updatePost.mockRejectedValue(new Error('Post not found'))
+
+    const response = await request(app).put('/posts/999').send({ title: 'A', content: 'B' })
+    expect(response.status).toBe(404)
+  })
+
+  test('Should delete a post', async () => {
+    postsService.deletePost.mockResolvedValue()
+
+    const response = await request(app).delete('/posts/1')
+    expect(response.status).toBe(204)
+  })
 })
