@@ -22,11 +22,11 @@ export default {
   methods: {
     makePreviewImage (event) {
       // Reference to the DOM input element
-      let input = event.target
+      const input = event.target
       // Ensure that you have a file before attempting to read it
       if (input.files && input.files[0]) {
         // create a new FileReader to read this image and convert to base64 format
-        let reader = new FileReader()
+        const reader = new FileReader()
         // Define a callback function to run, when FileReader finishes its job
         reader.onload = (e) => {
           // Note: arrow function used here, so that "this.previewImageData" refers to the previewImageData of Vue component
@@ -46,7 +46,9 @@ export default {
       const data = new FormData()
       data.append('logo', files[0])
 
-      axios.post('http://localhost:8080/', data)
+      // Use the global API URL defined in environment variables
+      const apiUrl = process.env.VUE_APP_API_URL || 'http://localhost:5000'
+      axios.post(`${apiUrl}/`, data)
     },
     removeImage () {
       this.previewImageData = ''

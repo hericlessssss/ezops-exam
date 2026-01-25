@@ -52,7 +52,7 @@ export default {
   methods: {
     checkLoadingStatus () {
       this.loading = true
-      let interval = setInterval(() => {
+      const interval = setInterval(() => {
         if (this.$refs.image && this.$refs.image.complete) {
           this.loading = false
           clearInterval(interval)

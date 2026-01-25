@@ -17,7 +17,7 @@ export default {
   props: {
     value: {
       type: String,
-      'default': ''
+      default: ''
     }
   },
 
@@ -58,7 +58,7 @@ export default {
   },
   computed: {
     isActiveClass () {
-      return {'active': this.sort === 'asc' || this.sort === 'desc'}
+      return { active: this.sort === 'asc' || this.sort === 'desc' }
     }
   }
 }

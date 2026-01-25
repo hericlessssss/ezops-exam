@@ -7,7 +7,9 @@
 import axios from 'axios'
 
 import { AuthService } from '@/services/auth.service'
-import { API_URL } from '../.env'
+
+// Use environment variable with fallback for local development
+const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:5000'
 
 export class Http {
   constructor (status) {

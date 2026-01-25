@@ -4,7 +4,7 @@ module.exports = {
   env: {
     node: true
   },
-  'extends': [
+  extends: [
     'plugin:vue/essential',
     '@vue/standard'
   ],
@@ -14,9 +14,9 @@ module.exports = {
     // allow async-await
     'generator-star-spacing': 0,
     // allow variables like >> user_id
-    'camelcase': 0,
+    camelcase: 0,
     'no-trailing-spaces': [
-      'error', {'skipBlankLines': true}
+      'error', { skipBlankLines: true }
     ],
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'

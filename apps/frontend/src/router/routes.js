@@ -9,7 +9,8 @@ import loginPage from '../pages/Login.vue'
 import notFoundPage from '../pages/NotFound.vue'
 
 import { routePropResolver } from './util'
-import { DOMAIN_TITLE } from '../.env'
+
+const DOMAIN_TITLE = process.env.VUE_APP_DOMAIN_TITLE || 'ezops-exam'
 
 export const routes = [
   {

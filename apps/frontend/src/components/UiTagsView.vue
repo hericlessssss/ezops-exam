@@ -21,7 +21,7 @@ export default {
   },
   computed: {
     tags () {
-      return this.tagsList.map(item => ({label: item[this.labelName], ...item}))
+      return this.tagsList.map(item => ({ label: item[this.labelName], ...item }))
     }
   }
 }

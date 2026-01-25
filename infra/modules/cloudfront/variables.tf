@@ -22,3 +22,15 @@ variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)
 }
+
+variable "aliases" {
+  description = "Extra CNAMEs (aliases) for the CloudFront distribution"
+  type        = list(string)
+  default     = []
+}
+
+variable "acm_certificate_arn" {
+  description = "ARN of ACM certificate for HTTPS (us-east-1)"
+  type        = string
+  default     = ""
+}

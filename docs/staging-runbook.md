@@ -43,8 +43,10 @@ terraform plan -out=tfplan
 
 > **Note on RDS Version**: The configuration now dynamically selects the latest valid PostgreSQL 16.x version available in the region to avoid "InvalidParameterCombination" errors.
 
-## Phase 3.5: Build & Push Docker Image
-The Kubernetes deployment expects an image in ECR, but it's currently empty.
+## Phase 3.5: Build & Push Images
+
+### Backend (Docker/ECR)
+The Kubernetes deployment expects an image in ECR.
 Run this in PowerShell from the project root:
 
 ```powershell
@@ -57,6 +59,29 @@ docker build -t stg-chico-backend ./apps/backend
 # 3. Tag & Push
 docker tag stg-chico-backend:latest 563702590660.dkr.ecr.us-east-2.amazonaws.com/stg-chico-backend:latest
 docker push 563702590660.dkr.ecr.us-east-2.amazonaws.com/stg-chico-backend:latest
+```
+
+### Frontend (S3/CloudFront)
+This step compiles the Vue.js app pointing to the Staging API and uploads it to S3.
+
+**Prerequisite:** Ensure `apps/frontend/.env.staging` exists (I created it for you).
+
+```powershell
+cd apps/frontend
+
+# 1. Install Dependencies
+npm install
+
+# 2. Build for Staging (Loads .env.staging)
+npm run build -- --mode staging
+
+# 3. Sync to S3 (Bucket Name from Terraform Output)
+# Replace <BUCKET_NAME> with: stg-chico-frontend-53abeb09
+aws s3 sync dist/ s3://stg-chico-frontend-53abeb09 --delete
+
+# 4. Invalidate CloudFront Cache (ID from Terraform Output)
+# Replace <DISTRIBUTION_ID> with: EEBZNGWUILDAZ
+aws cloudfront create-invalidation --distribution-id EEBZNGWUILDAZ --paths "/*"
 ```
 
 ## Phase 4: Kubernetes Deployment
@@ -116,8 +141,8 @@ After infrastructure is ready (`eks_cluster_endpoint` output):
    ```
 
 ## Phase 5: DNS Setup (Cloudflare)
-Since Staging does not use Route53 (to save cost/complexity), configuring DNS is manual.
-See [Staging DNS Guide](staging-dns-cloudflare.md).
+We successfully implemented a **Custom Domain** (`app-ezops.gratianovem.com.br`) using an AWS ACM Certificate.
+See [Staging DNS Guide](staging-dns-cloudflare.md) for the exact CNAME records configured.
 
 ## Phase 6: CI/CD Configuration (GitHub Actions)
 The workflows `backend-staging.yml` and `frontend-staging.yml` have been created.

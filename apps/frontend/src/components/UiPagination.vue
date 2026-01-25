@@ -3,7 +3,7 @@
     <li><button class="nav-btn first" @click="goToPage(0)" :disabled="isDisabledPrevBtn">first</button></li>
     <li><button class="nav-btn previous" @click="goToPage(current - 1)" :disabled="isDisabledPrevBtn">prev</button></li>
 
-    <li v-for="page in visiblePagesArray">
+    <li v-for="page in visiblePagesArray" :key="page">
       <button
         @click="goToPage(page)"
         :disabled="current === page"

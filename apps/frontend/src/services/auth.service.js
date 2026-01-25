@@ -7,15 +7,16 @@ import { ResponseWrapper, ErrorWrapper } from './util'
 import $store from '../store'
 import $router from '../router'
 
-import { API_URL } from '../.env'
+// Use environment variable with fallback
+const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:5000'
 
 let BEARER = ''
 
 export class AuthService {
   /**
-   ******************************
+   * ****************************
    * @API
-   ******************************
+   * ****************************
    */
 
   static async makeLogin ({ email, password }) {
@@ -38,7 +39,7 @@ export class AuthService {
     try {
       const response = await new Http({ auth: true }).post('auth/logout', {}, { withCredentials: true })
       _resetAuthData()
-      $router.push({ name: 'login' }).catch(() => {})
+      $router.push({ name: 'login' }).catch(() => { })
       return new ResponseWrapper(response, response.data.data)
     } catch (error) {
       throw new ErrorWrapper(error)
@@ -59,7 +60,7 @@ export class AuthService {
     } catch (error) {
       console.log(error.response.data.code)
       _resetAuthData()
-      $router.push({ name: 'login' }).catch(() => {})
+      $router.push({ name: 'login' }).catch(() => { })
       throw new ErrorWrapper(error)
     }
   }

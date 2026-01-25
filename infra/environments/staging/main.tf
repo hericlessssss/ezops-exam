@@ -64,6 +64,10 @@ module "cloudfront" {
   bucket_arn                  = module.s3_frontend.bucket_arn
   bucket_regional_domain_name = module.s3_frontend.bucket_regional_domain_name
   tags                        = var.tags
+  
+  # Custom Domain
+  aliases             = ["app-ezops.gratianovem.com.br"]
+  acm_certificate_arn = aws_acm_certificate.frontend.arn
 }
 
 module "route53" {

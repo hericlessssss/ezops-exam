@@ -5,6 +5,9 @@ node_modules
 # local env files
 .env.local
 .env.*.local
+# .env and .env.staging are committed as config
+!.env
+!.env.staging
 
 # Log files
 npm-debug.log*
