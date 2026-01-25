@@ -86,10 +86,12 @@ export default {
       })
     },
     fetchParams () {
-      return { ...this.prepareFetchParamsMixin({
-        limit: this.pagination.limit,
-        offset: this.pagination.offset
-      }) }
+      return {
+        ...this.prepareFetchParamsMixin({
+          limit: this.pagination.limit,
+          offset: this.pagination.offset
+        })
+      }
     }
   },
   created () {
