@@ -3,7 +3,9 @@ import profilePage from '../pages/profile/ProfilePage.vue'
 import profilePostsPage from '../pages/profile/ProfilePostsPage.vue'
 
 // single pages
+// single pages
 import homePage from '../pages/Home.vue'
+import helloPage from '../pages/HelloPage.vue'
 import newsPage from '../pages/news/NewsPage.vue'
 import loginPage from '../pages/Login.vue'
 import notFoundPage from '../pages/NotFound.vue'
@@ -18,6 +20,12 @@ export const routes = [
     name: 'index',
     component: homePage,
     meta: { title: `${DOMAIN_TITLE} | home` }
+  },
+  {
+    path: '/hello',
+    name: 'hello',
+    component: helloPage,
+    meta: { title: `${DOMAIN_TITLE} | hello` }
   },
   {
     path: '/news',
