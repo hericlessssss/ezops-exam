@@ -18,7 +18,7 @@ spec:
       containers:
         - name: backend
           # Image from Terraform Output: ecr_repository_urls["backend"]
-          image: 563702590660.dkr.ecr.us-east-2.amazonaws.com/stg-chico-backend:latest
+          image: PLACEHOLDER_IMAGE # Updated by CI/CD
           imagePullPolicy: Always
           ports:
             - containerPort: 3000

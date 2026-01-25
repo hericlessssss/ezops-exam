@@ -2,7 +2,7 @@ name: Frontend Staging CI/CD
 
 on:
   push:
-    branches: [ "main", "master", "staging" ]
+    branches: [ "main" ]
     paths:
       - 'apps/frontend/**'
       - '.github/workflows/frontend-staging.yml'
@@ -39,7 +39,8 @@ jobs:
       run: npm ci
 
     - name: Build
-      run: npm run build
+      # IMPORTANT: Force staging mode to load .env.staging
+      run: npm run build -- --mode staging
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
@@ -66,19 +67,15 @@ jobs:
 
     # AUTHENTICATION
     - name: Configure AWS Credentials (OIDC)
-      if: ${{ secrets.AWS_ROLE_ARN != '' }}
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-        aws-region: ${{ env.AWS_REGION }}
+        role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+        aws-region: ${{ vars.AWS_REGION }}
 
-    - name: Configure AWS Credentials (Access Keys)
-      if: ${{ secrets.AWS_ROLE_ARN == '' }}
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-region: ${{ env.AWS_REGION }}
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    - name: Verify AWS Identity
+      run: |
+        aws sts get-caller-identity
+        aws configure list
 
     # SYNC TO S3
     - name: Sync to S3

@@ -2,7 +2,7 @@ name: Backend Staging CI/CD
 
 on:
   push:
-    branches: [ "main", "master", "staging" ] # Added staging branch trigger
+    branches: [ "main" ] # Staging deploy happens on push to main (Single Branch Strategy)
     paths:
       - 'apps/backend/**'
       - 'k8s/staging/**'
@@ -63,19 +63,15 @@ jobs:
 
     # AUTHENTICATION
     - name: Configure AWS Credentials (OIDC)
-      if: ${{ secrets.AWS_ROLE_ARN != '' }}
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-        aws-region: ${{ env.AWS_REGION }}
+        role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+        aws-region: ${{ vars.AWS_REGION }}
 
-    - name: Configure AWS Credentials (Access Keys)
-      if: ${{ secrets.AWS_ROLE_ARN == '' }}
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-region: ${{ env.AWS_REGION }}
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    - name: Verify AWS Identity
+      run: |
+        aws sts get-caller-identity
+        aws configure list
 
     - name: Login to Amazon ECR
       id: login-ecr
