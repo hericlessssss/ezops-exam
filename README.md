@@ -1,75 +1,86 @@
-# ezops-exam
+# 🚀 EZOps Exam Solution
 
-End-to-end AWS DevOps implementation for a practical exam: containerization, IaC, Kubernetes, and CI/CD.
+**Candidate**: Chico
+**Project**: End-to-end DevOps Implementation (Infra, K8s, CI/CD, App Modernization)
 
-## Project Structure
+---
 
-- `apps/backend`: Node.js Express API.
-- `apps/frontend`: Vue.js Single Page Application.
-- `infra/`: Terraform configuration (Planned).
-- `k8s/`: Kubernetes manifests (Planned).
-- `.github/workflows`: CI/CD pipelines (Planned).
+## 📌 Overview
 
-## Local Development (Docker)
+This repository contains the complete solution for the EZOps Infrastructure Exam.
+The application (Vue.js + Node.js) has been modernized, dockerized, and deployed to AWS using **Three-Tier Architecture** best practices.
 
-The easiest way to run the project locally is using Docker Compose.
+### 🌟 Key Features
+*   **Infrastructure as Code**: Terraform modules for creating Reproducible Environments (Staging & Production).
+*   **Kubernetes (EKS)**: Backend running on EKS with AWS Load Balancer Controller.
+*   **Serverless Frontend**: Protected S3 Static Website via CloudFront + OAC.
+*   **Full HTTPS Security**:
+    *   **Frontend**: ACM `us-east-1` + CloudFront.
+    *   **Backend**: ACM `us-east-2` + ALB.
+    *   **Redirects**: Force SSL & Private S3 Buckets.
+*   **CI/CD**: GitHub Actions workflows with OIDC (Keyless authentication) and Environment Protection.
 
-### Prerequisites
+---
 
-- Docker
-- Docker Compose
+## 📚 Documentation
 
-### Running
+The `docs/` directory is the single source of truth for this project.
 
-1. **Start the application:**
-   ```bash
-   make up
-   # OR
-   docker-compose up -d
-   ```
+### ⚡ Rapid Access
+*   **[Staging Runbook](docs/runbooks/staging-runbook.md)**: How to operate the current Staging environment.
+*   **[Production Runbook](docs/runbooks/production-runbook-ezops.md)**: **How to promote/deploy to EZOps account.**
+*   **[Full Diary](docs/diary/full-implementation-history.md)**: Comprehensive detailed history of *everything* that was done.
 
-2. **Access the application:**
-   - Frontend: [http://localhost:8080](http://localhost:8080)
-   - Backend API: [http://localhost:5000/posts](http://localhost:5000/posts)
-   - Health Check: [http://localhost:5000/health](http://localhost:5000/health)
+### 🏛️ Architecture & Reference
+*   [Architecture Overview](docs/reference/architecture-overview.md)
+*   [DNS & Certificates](docs/reference/dns-and-certificates.md)
+*   [CI/CD Pipelines](docs/reference/cicd.md)
+*   [Production Readiness Checklist](docs/checklists/production-readiness-checklist.md)
 
-3. **Stop the application:**
-   ```bash
-   make down
-   # OR
-   docker-compose down
-   ```
+---
 
-4. **View Logs:**
-   ```bash
-   make logs
-   ```
+## 📂 Repository Structure
 
-### Validation Checklist
+```tree
+.
+├── apps/               # Application Source Code
+│   ├── backend/        # Node.js Express API (Dockerized)
+│   └── frontend/       # Vue.js App (Modernized: Sass, Env Vars, Dockerized)
+├── docs/               # Knowledge Base
+│   ├── runbooks/       # Operational Guides
+│   ├── checklists/     # Verification Steps
+│   └── reference/      # Deep Dives
+├── infra/              # Terraform IaC
+│   ├── modules/        # Reusable Modules (Networking, Compute, DB)
+│   └── environments/   # Environment Configs
+│       ├── staging/    # Current Active Env
+│       └── production/ # Ready for Exam Account
+└── k8s/                # Kubernetes Manifests
+    ├── staging/        # Staging Resources
+    └── production/     # Production Resources (Templates)
+```
 
-- [ ] Navigate to `http://localhost:8080`. You should see the Vue.js Welcome App.
-- [ ] Navigate to `http://localhost:5000/posts`. You should see a JSON response (e.g., `[]`).
-- [ ] Navigate to `http://localhost:5000/health`. You should see `OK`.
+---
 
-## Environment Variables
+## ✅ Status
 
-| Variable | Service | Description | Default (Docker) |
-|----------|---------|-------------|------------------|
-| `DB_HOST` | Backend | Database Hostname | `db` |
-| `DB_PORT` | Backend | Database Port | `5432` |
-| `DB_USER` | Backend | Database User | `postgres` |
-| `DB_PASSWORD` | Backend | Database Password | `postgres` |
-| `DB_NAME` | Backend | Database Name | `blog` |
+| Environment | Status | URL |
+|-------------|--------|-----|
+| **Local** | ✅ Operational | `docker-compose up` |
+| **Staging** | ✅ **Active** | [https://app-ezops.gratianovem.com.br](https://app-ezops.gratianovem.com.br) |
+| **Production** | ⏸️ **Ready** | Ready to Deploy to Exam Account (See Runbook) |
 
-## Future Improvements
+---
 
-The following improvements are planned or recommended for a production-ready environment:
+## 🛠️ Local Development
 
-- **Sass Migration**: Migrate from `node-sass` to `sass` (Dart Sass) to support modern Node.js versions in the frontend build.
-- **Environment Configuration**: Remove hardcoded configuration in `apps/frontend/src/.env.js` and implement runtime environment variable injection.
-- **Security**: Don't run containers as root (add user in Dockerfiles).
+To run the stack locally using Docker Compose:
 
-## Troubleshooting
+```bash
+make up
+# OR
+docker-compose up -d --build
+```
 
-- **Frontend Connection Error**: Ensure the backend container is running. The frontend is hardcoded to connect to `localhost:5000`. We map port 3000 (container) to 5000 (host) in `docker-compose.yml` to satisfy this.
-- **Database Connection Error**: The backend attempts to connect to the DB on startup. Ensure the `db` service is healthy.
+*   **Frontend**: http://localhost:8080
+*   **Backend**: http://localhost:5000/posts

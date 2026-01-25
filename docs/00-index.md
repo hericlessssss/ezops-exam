@@ -17,4 +17,5 @@
 - [Components](reference/components-and-responsibilities.md): Quem faz o que (Frontend, Backend, DB, Infra).
 
 ## 📓 Diary (Histórico)
+- [Full Implementation History](diary/full-implementation-history.md): **LEITURA OBRIGATÓRIA**. O resumo completo de tudo que foi feito, como e por quê.
 - [2026-01-25 Staging Finish](diary/2026-01-25-staging-finish.md): Notas finais da implementação de staging.
