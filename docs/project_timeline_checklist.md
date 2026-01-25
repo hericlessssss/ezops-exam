@@ -44,3 +44,13 @@ Marco 5: CI/CD & Deployment Optimization
 - Habilitação explícita de filenameHashing no vue.config.js
 - Forçamento de ambiente de Produção no build de Staging
 - Invalidação de Cache CloudFront e verificação de deploy
+
+Marco 6: Quality, Security & Automated Validation
+- Padronização de Linting (Backend Standard + Frontend Lint:fix)
+- Refatoração de Testes de Integração para Testes Unitários Mockados (Jest/Supertest)
+- Upgrade de Jest e Supertest para compatibilidade com Node 20 LTS
+- Resolução de 100+ Vulnerabilidades de Segurança via npm updates e overrides (Axios, Express, pg-promise, etc)
+- Atualização do Dockerfile (Backend) para Node 20-alpine e otimização `npm ci --only=production`
+- Correção de Syntax e Plugins nos Workflows de CI (Kubeconform-binary)
+- Ajuste de IAM OIDC Scope via Environment Context no GitHub Actions
+- Validação Final 100% Green (Lint, Unit Tests, Security Audit, Docker Build, Infra Check)
