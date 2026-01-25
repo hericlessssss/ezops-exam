@@ -1,14 +1,15 @@
-const express = require('express');
+kuconst express = require('express');
 const router = express.Router();
 const postsService = require('../service/postsService');
 
-try {
-	const posts = await postsService.getPosts();
-	res.set('x-total-count', posts.length);
-	res.json({ data: posts });
-} catch (e) {
-	next(e);
-}
+router.get('/posts', async function (req, res, next) {
+	try {
+		const posts = await postsService.getPosts();
+		res.set('x-total-count', posts.length);
+		res.json({ data: posts });
+	} catch (e) {
+		next(e);
+	}
 });
 
 router.post('/posts', async function (req, res, next) {
