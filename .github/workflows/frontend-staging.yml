@@ -1,0 +1,95 @@
+name: Frontend Staging CI/CD
+
+on:
+  push:
+    branches: [ "main", "master", "staging" ]
+    paths:
+      - 'apps/frontend/**'
+      - '.github/workflows/frontend-staging.yml'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-2
+  DIST_DIR: apps/frontend/dist
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./apps/frontend
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '14'
+        cache: 'npm'
+        cache-dependency-path: apps/frontend/package-lock.json
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Build
+      run: npm run build
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-dist
+        path: apps/frontend/dist
+        retention-days: 1
+
+  deploy:
+    name: Deploy to S3
+    needs: build
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Download Build Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: frontend-dist
+        path: apps/frontend/dist
+
+    # AUTHENTICATION
+    - name: Configure AWS Credentials (OIDC)
+      if: ${{ secrets.AWS_ROLE_ARN != '' }}
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Configure AWS Credentials (Access Keys)
+      if: ${{ secrets.AWS_ROLE_ARN == '' }}
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ env.AWS_REGION }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    # SYNC TO S3
+    - name: Sync to S3
+      env:
+        S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+      run: |
+        aws s3 sync apps/frontend/dist/ s3://$S3_BUCKET --delete
+
+    # INVALIDATE CLOUDFRONT
+    - name: Invalidate CloudFront Cache
+      env:
+        CLOUDFRONT_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+      run: |
+        aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_ID --paths "/*"

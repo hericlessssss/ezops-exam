@@ -7,5 +7,5 @@ variable "region" {
 variable "profile" {
   description = "AWS CLI Profile"
   type        = string
-  default     = "hrclsfss"
+  default     = "chico"
 }

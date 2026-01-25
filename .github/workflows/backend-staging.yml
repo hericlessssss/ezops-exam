@@ -1,0 +1,140 @@
+name: Backend Staging CI/CD
+
+on:
+  push:
+    branches: [ "main", "master", "staging" ] # Added staging branch trigger
+    paths:
+      - 'apps/backend/**'
+      - 'k8s/staging/**'
+      - '.github/workflows/backend-staging.yml'
+  workflow_dispatch: # Allow manual trigger
+
+env:
+  AWS_REGION: us-east-2
+  ECR_REPOSITORY: stg-chico-backend
+  EKS_CLUSTER_NAME: stg-chico-eks
+  DEPLOYMENT_NAME: ezops-backend
+  CONTAINER_NAME: backend
+  NAMESPACE: stg-chico
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  integration:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./apps/backend
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '14'
+        cache: 'npm'
+        cache-dependency-path: apps/backend/package-lock.json
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Run Tests
+      run: |
+        if npm run | grep -q "test"; then
+          npm test
+        else
+          echo "No test script found, skipping..."
+        fi
+
+  deploy:
+    name: Build, Push and Deploy
+    needs: integration
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # AUTHENTICATION
+    - name: Configure AWS Credentials (OIDC)
+      if: ${{ secrets.AWS_ROLE_ARN != '' }}
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Configure AWS Credentials (Access Keys)
+      if: ${{ secrets.AWS_ROLE_ARN == '' }}
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ env.AWS_REGION }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build and Push Docker Image
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      working-directory: ./apps/backend
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Update Kubeconfig
+      run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.29.0'
+
+    - name: Deploy to EKS
+      env:
+        IMAGE_URI: ${{ steps.build-image.outputs.image }}
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      run: |
+        # 1. Apply Namespace
+        kubectl apply -f k8s/staging/namespace.yaml
+
+        # 2. Apply ConfigMap
+        kubectl apply -f k8s/staging/backend/configmap.yaml
+
+        # 3. Create Secrets (Dynamic)
+        # Using dry-run to generate YAML and pipe to apply avoids exposing secrets in logs
+        kubectl create secret generic backend-secrets \
+          --namespace ${{ env.NAMESPACE }} \
+          --from-literal=DB_HOST="$DB_HOST" \
+          --from-literal=DB_NAME="$DB_NAME" \
+          --from-literal=DB_PORT="$DB_PORT" \
+          --from-literal=DB_USER="$DB_USER" \
+          --from-literal=DB_PASSWORD="$DB_PASSWORD" \
+          --dry-run=client -o yaml | kubectl apply -f -
+
+        # 4. Apply Application Manifests
+        # Note: We use the files in k8s/staging
+        kubectl apply -f k8s/staging/backend/deployment.yaml
+        kubectl apply -f k8s/staging/backend/service.yaml
+        kubectl apply -f k8s/staging/backend/ingress.yaml
+
+        # 5. Update Image
+        kubectl set image deployment/$DEPLOYMENT_NAME -n ${{ env.NAMESPACE }} $CONTAINER_NAME=$IMAGE_URI
+
+        # 6. Verify Rollout
+        kubectl rollout status deployment/$DEPLOYMENT_NAME -n ${{ env.NAMESPACE }}

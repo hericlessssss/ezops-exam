@@ -39,6 +39,12 @@ resource "aws_security_group" "rds" {
   })
 }
 
+# Fetch latest valid version for the specified major version in this region
+data "aws_rds_engine_version" "postgresql" {
+  engine                 = "postgres"
+  parameter_group_family = "postgres${var.engine_major_version}"
+}
+
 resource "random_password" "password" {
   length           = 16
   special          = true
@@ -48,7 +54,8 @@ resource "random_password" "password" {
 resource "aws_db_instance" "postgres" {
   identifier        = "${var.name_prefix}-db"
   engine            = "postgres"
-  engine_version    = var.engine_version
+  # Use version from data source to avoid "InvalidParameterCombination"
+  engine_version    = data.aws_rds_engine_version.postgresql.version
   instance_class    = var.instance_class
   allocated_storage = var.allocated_storage
 

@@ -34,3 +34,9 @@ variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)
 }
+
+variable "enabled" {
+  description = "Whether to create Route53 records"
+  type        = bool
+  default     = true
+}

@@ -13,10 +13,11 @@ variable "subnet_ids" {
   type        = list(string)
 }
 
-variable "engine_version" {
-  description = "PostgreSQL engine version"
+# Using major version allows the data source to pick the latest stable minor
+variable "engine_major_version" {
+  description = "PostgreSQL engine major version (e.g. 16, 15)"
   type        = string
-  default     = "15.4"
+  default     = "16"
 }
 
 variable "instance_class" {
