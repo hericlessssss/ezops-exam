@@ -125,7 +125,6 @@ jobs:
           terraform validate
 
       # K8s Validation (Kubeconform)
-      - name: Kubeconform (K8s Manifests)
       - name: Install Kubeconform
         run: |
           wget https://github.com/yannh/kubeconform/releases/download/v0.6.6/kubeconform-linux-amd64.tar.gz
