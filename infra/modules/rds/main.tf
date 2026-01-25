@@ -52,8 +52,8 @@ resource "random_password" "password" {
 }
 
 resource "aws_db_instance" "postgres" {
-  identifier        = "${var.name_prefix}-db"
-  engine            = "postgres"
+  identifier = "${var.name_prefix}-db"
+  engine     = "postgres"
   # Use version from data source to avoid "InvalidParameterCombination"
   engine_version    = data.aws_rds_engine_version.postgresql.version
   instance_class    = var.instance_class
