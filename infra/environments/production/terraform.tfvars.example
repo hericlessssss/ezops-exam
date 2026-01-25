@@ -1,0 +1,12 @@
+project_name = "ezops-exam"
+environment  = "staging"
+profile      = "hrclsfss"
+region       = "us-east-2"
+
+# No need for Route53 in Staging if using Cloudflare
+enable_route53 = false
+
+# If using Route53, provide these:
+# hosted_zone_id = "Z0..."
+# exam_domain    = "exam.ezopscloud.tech"
+# dns_label      = "chico"
