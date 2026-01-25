@@ -1,5 +1,6 @@
 <template>
   <div class="news page">
+    <!-- Force Rebuild v2 -->
     <div>
       <h1>{{ newsText }}</h1>
       <br><br>
