@@ -78,11 +78,18 @@ jobs:
         aws configure list
 
     # SYNC TO S3
-    - name: Sync to S3
+    # SYNC TO S3 (Smart Caching Strategy)
+    - name: Sync Assets to S3 (Cache Forever)
       env:
         S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
       run: |
-        aws s3 sync apps/frontend/dist/ s3://$S3_BUCKET --delete
+        aws s3 sync apps/frontend/dist/ s3://$S3_BUCKET --exclude "index.html" --exclude "service-worker.js" --delete --cache-control "max-age=31536000,public,immutable"
+
+    - name: Sync HTML to S3 (No Cache)
+      env:
+        S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+      run: |
+        aws s3 sync apps/frontend/dist/ s3://$S3_BUCKET --exclude "*" --include "index.html" --include "service-worker.js" --cache-control "max-age=0,no-cache,no-store,must-revalidate"
 
     # INVALIDATE CLOUDFRONT
     - name: Invalidate CloudFront Cache
