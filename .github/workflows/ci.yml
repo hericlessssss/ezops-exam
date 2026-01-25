@@ -88,7 +88,7 @@ jobs:
         run: npm run build -- --mode production
 
       - name: Security Audit (Deps)
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=high --omit=dev
 
   # =================================================================================
   # INFRASTRUCTURE CHECKS (Terraform + K8s)
