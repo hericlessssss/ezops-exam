@@ -11,6 +11,7 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_NAME=blog
+      - CORS_ALLOWED_ORIGINS=http://localhost:8080
     depends_on:
       - db
     networks:
@@ -30,7 +31,6 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=blog
     volumes:
-      - ./apps/backend/database/create.sql:/docker-entrypoint-initdb.d/create.sql
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
