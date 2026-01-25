@@ -15,6 +15,7 @@
 - [DNS & Certificates](reference/dns-and-certificates.md): Configuração Cloudflare, ACM e CloudFront.
 - [CI/CD](reference/cicd.md): Pipelines GitHub Actions.
 - [Components](reference/components-and-responsibilities.md): Quem faz o que (Frontend, Backend, DB, Infra).
+- [Aplicação Visão Geral](reference/aplicacao-visao-geral.md): **(Novo)** Análise detalhada da aplicação, fluxos e comportamento.
 
 ## 📓 Diary (Histórico)
 - [Full Implementation History](diary/full-implementation-history.md): **LEITURA OBRIGATÓRIA**. O resumo completo de tudo que foi feito, como e por quê.
