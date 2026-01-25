@@ -2,7 +2,7 @@ name: Backend Staging CI/CD
 
 on:
   push:
-    branches: [ "main" ] # Staging deploy happens on push to main (Single Branch Strategy)
+    branches: [ "main" ]
     paths:
       - 'apps/backend/**'
       - 'k8s/staging/**'
