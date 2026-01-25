@@ -2,13 +2,13 @@ const express = require('express');
 const router = express.Router();
 const postsService = require('../service/postsService');
 
-router.get('/posts', async function (req, res, next) {
-	try {
-		const posts = await postsService.getPosts();
-		res.json(posts);
-	} catch (e) {
-		next(e);
-	}
+try {
+	const posts = await postsService.getPosts();
+	res.set('x-total-count', posts.length);
+	res.json({ data: posts });
+} catch (e) {
+	next(e);
+}
 });
 
 router.post('/posts', async function (req, res, next) {
