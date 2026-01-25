@@ -7,8 +7,9 @@
 
     <div class="news-list">
       <DataBox :loading="loading" :isEmpty="isEmpty" :error="error">
-        <div class="item" v-for="item in news" :key="item.id">
-          {{item.title}}
+        <div class="item" v-for="item in news" :key="item.id" style="margin-bottom: 40px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
+          <h2 style="color: #333; margin-bottom: 15px;">{{item.title}}</h2>
+          <div class="content" v-html="item.content" style="font-size: 16px; line-height: 1.6; color: #555;"></div>
         </div>
       </DataBox>
     </div>
