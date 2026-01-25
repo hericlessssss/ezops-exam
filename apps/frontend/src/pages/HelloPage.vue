@@ -7,7 +7,7 @@
         Welcome to the Hello page. This is a new feature added to the EzOps application.
       </p>
       <br>
-      <img src="https://media.licdn.com/dms/image/v2/D4D22AQFPsJi7UICczQ/feedshare-shrink_1280/B4DZuNhAjgJUAs-/0/1767605799802?e=1770854400&v=beta&t=KbfUOjyWWgWF1HDPQ_0sWSpxY2hDVinHxBe38QBUnn0" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      <img src="https://i.imgur.com/vUtatQS.jpeg" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
     </div>
   </div>
 </template>
