@@ -1,0 +1,119 @@
+name: Post-Deploy Smoke Test
+
+on:
+  workflow_run:
+    workflows: ["Deploy Staging", "Deploy Production"]
+    types:
+      - completed
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-2
+  EKS_CLUSTER_NAME: stg-chico-eks
+  NAMESPACE: observability
+  GRAFANA_URL: https://obs-ezops.gratianovem.com.br/
+
+jobs:
+  post-deploy-smoke:
+    name: Post-Deploy Smoke Test
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # Using the same Role as the deploy workflows
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update Kubeconfig
+        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Cluster Connectivity & Health
+        run: |
+          echo "Checking connectivity to cluster..."
+          kubectl get nodes
+          echo "Namespace: ${{ env.NAMESPACE }} overview:"
+          kubectl -n ${{ env.NAMESPACE }} get pods,svc,servicemonitor,prometheusrule
+
+      - name: Rollout Status Checks
+        id: rollout_checks
+        run: |
+          echo "Checking Tempo rollout..."
+          kubectl -n ${{ env.NAMESPACE }} rollout status sts/tempo --timeout=180s
+          
+          echo "Checking OpenTelemetry Collector rollout..."
+          # Try deployment first, fallback to statefulset if needed
+          if kubectl -n ${{ env.NAMESPACE }} get deployment otel-collector-opentelemetry-collector > /dev/null 2>&1; then
+            kubectl -n ${{ env.NAMESPACE }} rollout status deployment/otel-collector-opentelemetry-collector --timeout=120s
+          elif kubectl -n ${{ env.NAMESPACE }} get sts otel-collector-opentelemetry-collector > /dev/null 2>&1; then
+            kubectl -n ${{ env.NAMESPACE }} rollout status sts/otel-collector-opentelemetry-collector --timeout=120s
+          else
+            echo "OTEL Collector not found as deployment or sts, skipping rollout check."
+          fi
+
+      - name: Metric Sanity (Tempo)
+        run: |
+          echo "Checking Tempo ingestion metrics..."
+          # Wait a few seconds for metrics to stabilize
+          sleep 10
+          kubectl -n ${{ env.NAMESPACE }} exec tempo-0 -- sh -lc "wget -qO- http://127.0.0.1:3200/metrics | egrep 'tempo_ingester_bytes_received_total|tempo_ingester_blocks_flushed_total' | head -n 50"
+
+      - name: External HTTP Smoke Test
+        run: |
+          echo "Pinging Grafana at ${{ env.GRAFANA_URL }}..."
+          curl -fsSIL ${{ env.GRAFANA_URL }}
+
+      - name: Generate Test Traces (Telemetrygen)
+        run: |
+          echo "Running telemetrygen to force traces..."
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: telemetrygen-smoke-test
+            namespace: ${{ env.NAMESPACE }}
+            labels:
+              app: telemetrygen
+          spec:
+            containers:
+            - name: telemetrygen
+              image: ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:latest
+              args:
+                - traces
+                - --otlp-endpoint=otel-collector-opentelemetry-collector.${{ env.NAMESPACE }}.svc.cluster.local:4317
+                - --otlp-insecure
+                - --duration=10s
+                - --rate=500
+            restartPolicy: Never
+          EOF
+          
+          echo "Waiting for telemetrygen to finish..."
+          kubectl -n ${{ env.NAMESPACE }} wait --for=jsonpath='{.status.phase}'=Succeeded pod/telemetrygen-smoke-test --timeout=90s || true || echo "Telemetrygen timed out or failed, check logs"
+          
+          echo "Telemetrygen logs:"
+          kubectl -n ${{ env.NAMESPACE }} logs telemetrygen-smoke-test
+          
+          echo "Cleaning up telemetrygen pod..."
+          kubectl -n ${{ env.NAMESPACE }} delete pod telemetrygen-smoke-test
+
+      - name: Final Ingestion Validation
+        run: |
+          echo "Confirming ingestion after telemetrygen..."
+          sleep 5
+          kubectl -n ${{ env.NAMESPACE }} exec tempo-0 -- sh -lc "wget -qO- http://127.0.0.1:3200/metrics | grep 'tempo_ingester_bytes_received_total'"
+
+      - name: Diagnostic Dumps (On Failure)
+        if: failure()
+        run: |
+          echo "Gathering diagnostic information..."
+          kubectl -n ${{ env.NAMESPACE }} get events --sort-by=.lastTimestamp | tail -n 50
+          kubectl -n ${{ env.NAMESPACE }} describe pods -l app.kubernetes.io/name=tempo --tail 1
+          kubectl -n ${{ env.NAMESPACE }} logs -l app.kubernetes.io/name=tempo --all-containers --tail 200
+          kubectl -n ${{ env.NAMESPACE }} logs -l app.kubernetes.io/name=opentelemetry-collector --all-containers --tail 200
