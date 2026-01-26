@@ -54,3 +54,17 @@ Marco 6: Quality, Security & Automated Validation
 - Correção de Syntax e Plugins nos Workflows de CI (Kubeconform-binary)
 - Ajuste de IAM OIDC Scope via Environment Context no GitHub Actions
 - Validação Final 100% Green (Lint, Unit Tests, Security Audit, Docker Build, Infra Check)
+
+Marco 7: Observability, Tracing & Post-Deploy Validation
+- Implementação da Stack de Observabilidade (kube-prometheus-stack) no namespace `observability`
+- Configuração de Alertas via Alertmanager com integração SMTP (Gmail) e validação de entrega
+- Implementação de Monitoramento Sintético (Blackbox Exporter) com Probes para API, Frontend e Grafana
+- Deploy e Configuração do Grafana Tempo para Rastreamento Distribuído (Distributed Tracing)
+- Implementação de ServiceAccount IRSA (IAM Role for Service Accounts) para escrita do Tempo no Amazon S3
+- Integração do Tempo com Prometheus via ServiceMonitor para coleta de métricas de ingestão
+- Validação de Ingestão de Traces via OpenTelemetry Collector usando `telemetrygen`
+- Automação de Pós-Deploy (GitHub Actions) com o workflow `Post-Deploy Smoke Test`:
+- Validação automática de conectividade EKS e Rollout de componentes
+- Teste de sanidade de métricas e acessibilidade de endpoints externos
+- Geração de tráfego sintético e verificação de fluxo de telemetria
+- Coleta automática de logs e eventos para troubleshooting preventivo

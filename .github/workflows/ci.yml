@@ -3,18 +3,24 @@ name: CI - Quality & Security
 on:
   pull_request:
     branches: [ "main" ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.agent/**'
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.agent/**'
   workflow_dispatch:
 
 permissions:
   contents: read
-  security-events: write # For upload-sarif
+  security-events: write
 
 jobs:
-  # =================================================================================
   # BACKEND CHECKS
-  # =================================================================================
   backend-quality:
     name: Backend (Lint/Test/Audit)
     runs-on: ubuntu-latest
@@ -42,7 +48,6 @@ jobs:
         run: npm test
 
       - name: Security Audit (Deps)
-        # Audit fail on High/Critical only
         run: npm audit --audit-level=high
 
   backend-docker-lint:
@@ -56,11 +61,9 @@ jobs:
         with:
           dockerfile: apps/backend/Dockerfile
           failure-threshold: error
-          ignore: DL3008,DL3018 # Ignore apt-get pin version warning if valid
+          ignore: DL3008,DL3018
 
-  # =================================================================================
   # FRONTEND CHECKS
-  # =================================================================================
   frontend-quality:
     name: Frontend (Lint/Build/Audit)
     runs-on: ubuntu-latest
@@ -90,9 +93,7 @@ jobs:
       - name: Security Audit (Deps)
         run: npm audit --audit-level=high --omit=dev
 
-  # =================================================================================
   # INFRASTRUCTURE CHECKS (Terraform + K8s)
-  # =================================================================================
   infra-quality:
     name: Infra & K8s Validation
     runs-on: ubuntu-latest
@@ -134,9 +135,7 @@ jobs:
       - name: Kubeconform (K8s Manifests)
         run: kubeconform -strict -summary -output text k8s/staging/
 
-  # =================================================================================
   # SECURITY SCANNING (Gitleaks)
-  # =================================================================================
   gitleaks:
     name: Gitleaks Secret Scan
     runs-on: ubuntu-latest
