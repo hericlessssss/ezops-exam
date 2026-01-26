@@ -20,6 +20,8 @@ jobs:
   post-deploy-smoke:
     name: Post-Deploy Smoke Test
     runs-on: ubuntu-latest
+    # Added environment to access AWS_ROLE_ARN and other vars/secrets
+    environment: staging
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout Code
@@ -95,7 +97,7 @@ jobs:
           EOF
           
           echo "Waiting for telemetrygen to finish..."
-          kubectl -n ${{ env.NAMESPACE }} wait --for=jsonpath='{.status.phase}'=Succeeded pod/telemetrygen-smoke-test --timeout=90s || true || echo "Telemetrygen timed out or failed, check logs"
+          kubectl -n ${{ env.NAMESPACE }} wait --for=jsonpath='{.status.phase}'=Succeeded pod/telemetrygen-smoke-test --timeout=90s || (echo "Telemetrygen timed out or failed" && kubectl -n ${{ env.NAMESPACE }} get pod telemetrygen-smoke-test -o yaml && exit 1)
           
           echo "Telemetrygen logs:"
           kubectl -n ${{ env.NAMESPACE }} logs telemetrygen-smoke-test
@@ -111,9 +113,15 @@ jobs:
 
       - name: Diagnostic Dumps (On Failure)
         if: failure()
+        continue-on-error: true
         run: |
           echo "Gathering diagnostic information..."
-          kubectl -n ${{ env.NAMESPACE }} get events --sort-by=.lastTimestamp | tail -n 50
-          kubectl -n ${{ env.NAMESPACE }} describe pods -l app.kubernetes.io/name=tempo --tail 1
-          kubectl -n ${{ env.NAMESPACE }} logs -l app.kubernetes.io/name=tempo --all-containers --tail 200
-          kubectl -n ${{ env.NAMESPACE }} logs -l app.kubernetes.io/name=opentelemetry-collector --all-containers --tail 200
+          # Only run kubectl if we managed to at least attempt kubeconfig update
+          if kubectl config current-context > /dev/null 2>&1; then
+            kubectl -n ${{ env.NAMESPACE }} get events --sort-by=.lastTimestamp | tail -n 50
+            kubectl -n ${{ env.NAMESPACE }} describe pods -l app.kubernetes.io/name=tempo
+            kubectl -n ${{ env.NAMESPACE }} logs -l app.kubernetes.io/name=tempo --all-containers --tail 200
+            kubectl -n ${{ env.NAMESPACE }} logs -l app.kubernetes.io/name=opentelemetry-collector --all-containers --tail 200
+          else
+            echo "Kubectl not configured (likely AWS credential failure). Skipping cluster diagnostics."
+          fi
