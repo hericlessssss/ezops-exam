@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+Dockerfile
+.dockerignore
+docs
+deps.txt
+request_response.txt
+status_code.txt
