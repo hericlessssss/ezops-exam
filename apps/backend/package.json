@@ -21,6 +21,10 @@
     "jsonwebtoken": "^9.0.3",
     "pg-promise": "^12.3.0"
   },
+  "overrides": {
+    "tar": "7.5.6",
+    "brace-expansion": "2.0.1"
+  },
   "devDependencies": {
     "eslint": "^8.56.0",
     "eslint-config-standard": "^17.1.0",

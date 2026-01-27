@@ -1,5 +1,9 @@
 FROM node:20-alpine
 
+# Security: Upgrade OS packages and force safe tar version globally
+RUN apk update && apk upgrade --no-cache && \
+    npm install -g tar@latest
+
 WORKDIR /app
 
 COPY package*.json ./
