@@ -1,14 +1,14 @@
-# 🚀 EzOps Exam Solution — Cloud-Native Modernization
+# EzOps Exam Solution — Cloud-Native Modernization
 
 **Candidate**: Chico  
 **Focus**: End-to-End DevOps | Infrastructure as Code | EKS | CI/CD | Security
 
 ---
 
-## 🌟 Overview
+## Overview
 This project demonstrates a professional, secure, and highly automated modernization of a Node.js/Vue.js application. It follows the **Well-Architected Framework** principles, featuring a Three-Tier architecture deployed on AWS using Terraform and Kubernetes.
 
-### 💎 Key Highlights
+### Key Highlights
 *   **Infrastructure as Code (IaC)**: Fully modular Terraform for Reproducible Environments.
 *   **Container Orquestration**: High-availability Backend on **Amazon EKS**.
 *   **Secure Content Delivery**: Serverless Frontend via **S3 + CloudFront (OAC)**.
@@ -52,7 +52,5 @@ cd apps/frontend && npm run lint
 
 ---
 
-## 🏁 Final Conclusion
+## Final Conclusion
 This repository is the final result of a complete end-to-end DevOps implementation, focusing on **automation, security, and scalability**. Every resource, from VPC to CI/CD workflows, has been carefully crafted and validated for production readiness.
-
-> Made with ☕ and passion for DevOps culture.
