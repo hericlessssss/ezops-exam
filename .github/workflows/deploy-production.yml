@@ -86,12 +86,12 @@ jobs:
       - name: Deploy to EKS
         env:
           IMAGE_URI: ${{ needs.build-push-backend.outputs.image }}
-          DB_HOST: ${{ secrets.DB_HOST || vars.DB_HOST }}
-          DB_NAME: ${{ secrets.DB_NAME || vars.DB_NAME }}
-          DB_PORT: ${{ secrets.DB_PORT || vars.DB_PORT }}
-          DB_USER: ${{ secrets.DB_USER || vars.DB_USER }}
+          DB_HOST: ${{ secrets.DB_HOST || vars.DB_HOST || 'test-chico-db.c3geoy682q08.us-east-1.rds.amazonaws.com' }}
+          DB_NAME: ${{ secrets.DB_NAME || vars.DB_NAME || 'blog' }}
+          DB_PORT: ${{ secrets.DB_PORT || vars.DB_PORT || '5432' }}
+          DB_USER: ${{ secrets.DB_USER || vars.DB_USER || 'postgres' }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD || vars.DB_PASSWORD }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET || vars.JWT_SECRET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET || vars.JWT_SECRET || '64a6dc0caab4000ca4eff6daee52843c' }}
         run: |
           # Apply ConfigMaps & Secrets & Deployments
           kubectl apply -f k8s/production/namespace.yaml
