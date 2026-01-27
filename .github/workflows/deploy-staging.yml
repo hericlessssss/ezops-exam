@@ -13,21 +13,16 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  AWS_REGION: ${{ vars.AWS_REGION || secrets.AWS_REGION }}
-  ECR_REPOSITORY: stg-chico-backend
-  EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME || secrets.EKS_CLUSTER_NAME }}
-  DEPLOYMENT_NAME: ezops-backend
-  CONTAINER_NAME: backend
-  NAMESPACE: stg-chico
-  S3_BUCKET: ${{ secrets.S3_BUCKET_NAME || vars.S3_BUCKET_NAME }}
-
 jobs:
   # BACKEND DEPLOY
   build-push-backend:
     name: Build & Push Backend
     runs-on: ubuntu-latest
     environment: staging
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || secrets.AWS_REGION }}
+      ECR_REPOSITORY: stg-chico-backend
+      EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME || secrets.EKS_CLUSTER_NAME }}
     outputs:
       image: ${{ steps.build-image.outputs.image }}
     steps:
@@ -40,9 +35,6 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN || vars.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GitHubActionsSession
-
-      # - name: AWS Identity Check (Troubleshooting)
-      #   run: aws sts get-caller-identity
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -74,6 +66,12 @@ jobs:
     needs: build-push-backend
     runs-on: ubuntu-latest
     environment: staging
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || secrets.AWS_REGION }}
+      EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME || secrets.EKS_CLUSTER_NAME }}
+      DEPLOYMENT_NAME: ezops-backend
+      CONTAINER_NAME: backend
+      NAMESPACE: stg-chico
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -85,21 +83,18 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GitHubActionsSession
 
-      # - name: AWS Identity Check (Troubleshooting)
-      #   run: aws sts get-caller-identity
-
       - name: Update Kubeconfig
         run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
 
       - name: Deploy to EKS
         env:
           IMAGE_URI: ${{ needs.build-push-backend.outputs.image }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DB_HOST: ${{ secrets.DB_HOST || vars.DB_HOST }}
+          DB_NAME: ${{ secrets.DB_NAME || vars.DB_NAME }}
+          DB_PORT: ${{ secrets.DB_PORT || vars.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USER || vars.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD || vars.DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET || vars.JWT_SECRET }}
         run: |
           # Apply ConfigMaps & Secrets & Deployments
           kubectl apply -f k8s/staging/namespace.yaml
@@ -128,6 +123,9 @@ jobs:
     name: Deploy Frontend (S3)
     runs-on: ubuntu-latest
     environment: staging
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || secrets.AWS_REGION }}
+      S3_BUCKET: ${{ secrets.S3_BUCKET_NAME || vars.S3_BUCKET_NAME }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -154,9 +152,6 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GitHubActionsSession
 
-      # - name: AWS Identity Check (Troubleshooting)
-      #   run: aws sts get-caller-identity
-
       - name: Sync Assets (Cache Forever)
         run: |
           aws s3 sync apps/frontend/dist/ s3://$S3_BUCKET --exclude "index.html" --exclude "service-worker.js" --delete --cache-control "max-age=31536000,public,immutable"
@@ -167,5 +162,5 @@ jobs:
 
       - name: Invalidate CloudFront
         env:
-          CLOUDFRONT_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+          CLOUDFRONT_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID || vars.CLOUDFRONT_DISTRIBUTION_ID }}
         run: aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_ID --paths "/*"
