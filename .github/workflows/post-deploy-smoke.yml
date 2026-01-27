@@ -61,7 +61,6 @@ jobs:
       - name: Metric Sanity (Tempo)
         run: |
           echo "Checking Tempo ingestion metrics..."
-          sleep 10
           kubectl -n ${{ env.NAMESPACE }} exec tempo-0 -- sh -lc "wget -qO- http://127.0.0.1:3200/metrics | egrep 'tempo_ingester_bytes_received_total|tempo_ingester_blocks_flushed_total' | head -n 50"
 
       - name: External HTTP Smoke Test
@@ -105,7 +104,6 @@ jobs:
       - name: Final Ingestion Validation
         run: |
           echo "Confirming ingestion after telemetrygen..."
-          sleep 5
           kubectl -n ${{ env.NAMESPACE }} exec tempo-0 -- sh -lc "wget -qO- http://127.0.0.1:3200/metrics | grep 'tempo_ingester_bytes_received_total'"
 
       - name: Diagnostic Dumps (On Failure)
