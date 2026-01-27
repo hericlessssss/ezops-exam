@@ -10,12 +10,6 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  AWS_REGION: ${{ vars.AWS_REGION }}
-  EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
-  NAMESPACE: observability
-  GRAFANA_URL: ${{ vars.GRAFANA_URL || 'https://obs-ezops.gratianovem.com.br/' }}
-
 jobs:
   post-deploy-smoke:
     name: Post-Deploy Smoke Test
@@ -23,6 +17,11 @@ jobs:
     # Dynamic environment based on the triggering workflow
     environment: ${{ (github.event.workflow_run.name == 'Deploy Production' && 'production') || 'staging' }}
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || secrets.AWS_REGION || (github.event.workflow_run.name == 'Deploy Production' && 'us-east-1') || 'us-east-2' }}
+      EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME || secrets.EKS_CLUSTER_NAME || (github.event.workflow_run.name == 'Deploy Production' && 'test-chico-eks') || 'stg-chico-eks' }}
+      NAMESPACE: observability
+      GRAFANA_URL: ${{ vars.GRAFANA_URL || secrets.GRAFANA_URL || 'https://obs-ezops.gratianovem.com.br/' }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -30,12 +29,9 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN || vars.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GitHubActionsSession
-
-      # - name: AWS Identity Check (Troubleshooting)
-      #   run: aws sts get-caller-identity
 
       - name: Update Kubeconfig
         run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
@@ -54,7 +50,6 @@ jobs:
           kubectl -n ${{ env.NAMESPACE }} rollout status sts/tempo --timeout=180s
           
           echo "Checking OpenTelemetry Collector rollout..."
-          # Try deployment first, fallback to statefulset if needed
           if kubectl -n ${{ env.NAMESPACE }} get deployment otel-collector-opentelemetry-collector > /dev/null 2>&1; then
             kubectl -n ${{ env.NAMESPACE }} rollout status deployment/otel-collector-opentelemetry-collector --timeout=120s
           elif kubectl -n ${{ env.NAMESPACE }} get sts otel-collector-opentelemetry-collector > /dev/null 2>&1; then
@@ -66,7 +61,6 @@ jobs:
       - name: Metric Sanity (Tempo)
         run: |
           echo "Checking Tempo ingestion metrics..."
-          # Wait a few seconds for metrics to stabilize
           sleep 10
           kubectl -n ${{ env.NAMESPACE }} exec tempo-0 -- sh -lc "wget -qO- http://127.0.0.1:3200/metrics | egrep 'tempo_ingester_bytes_received_total|tempo_ingester_blocks_flushed_total' | head -n 50"
 
@@ -119,7 +113,6 @@ jobs:
         continue-on-error: true
         run: |
           echo "Gathering diagnostic information..."
-          # Only run kubectl if we managed to at least attempt kubeconfig update
           if kubectl config current-context > /dev/null 2>&1; then
             kubectl -n ${{ env.NAMESPACE }} get events --sort-by=.lastTimestamp | tail -n 50
             kubectl -n ${{ env.NAMESPACE }} describe pods -l app.kubernetes.io/name=tempo
