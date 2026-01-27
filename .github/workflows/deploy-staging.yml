@@ -20,14 +20,21 @@ jobs:
     runs-on: ubuntu-latest
     environment: staging
     env:
-      AWS_REGION: ${{ vars.AWS_REGION || secrets.AWS_REGION }}
+      AWS_REGION: ${{ vars.AWS_REGION || secrets.AWS_REGION || 'us-east-2' }}
       ECR_REPOSITORY: stg-chico-backend
-      EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME || secrets.EKS_CLUSTER_NAME }}
+      EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME || secrets.EKS_CLUSTER_NAME || vars.CLUSTER_NAME || 'stg-chico-eks' }}
     outputs:
       image: ${{ steps.build-image.outputs.image }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Diagnostic (Variable Check)
+        run: |
+          echo "Checking Variable Presence..."
+          echo "EKS_CLUSTER_NAME length: ${#EKS_CLUSTER_NAME}"
+        env:
+          EKS_CLUSTER_NAME: ${{ env.EKS_CLUSTER_NAME }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -67,8 +74,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: staging
     env:
-      AWS_REGION: ${{ vars.AWS_REGION || secrets.AWS_REGION }}
-      EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME || secrets.EKS_CLUSTER_NAME }}
+      AWS_REGION: ${{ vars.AWS_REGION || secrets.AWS_REGION || 'us-east-2' }}
+      EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME || secrets.EKS_CLUSTER_NAME || vars.CLUSTER_NAME || 'stg-chico-eks' }}
       DEPLOYMENT_NAME: ezops-backend
       CONTAINER_NAME: backend
       NAMESPACE: stg-chico
@@ -124,8 +131,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: staging
     env:
-      AWS_REGION: ${{ vars.AWS_REGION || secrets.AWS_REGION }}
-      S3_BUCKET: ${{ secrets.S3_BUCKET_NAME || vars.S3_BUCKET_NAME }}
+      AWS_REGION: ${{ vars.AWS_REGION || secrets.AWS_REGION || 'us-east-2' }}
+      S3_BUCKET: ${{ secrets.S3_BUCKET_NAME || vars.S3_BUCKET_NAME || 'test-chico-frontend-c627463a' }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
