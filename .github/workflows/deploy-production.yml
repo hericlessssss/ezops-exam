@@ -10,13 +10,13 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_REGION: ${{ vars.AWS_REGION || secrets.AWS_REGION }}
   ECR_REPOSITORY: test-chico-backend
-  EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
+  EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME || secrets.EKS_CLUSTER_NAME }}
   DEPLOYMENT_NAME: ezops-backend
   CONTAINER_NAME: backend
   NAMESPACE: test-chico
-  S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+  S3_BUCKET: ${{ secrets.S3_BUCKET_NAME || vars.S3_BUCKET_NAME }}
 
 jobs:
   # BACKEND DEPLOY
