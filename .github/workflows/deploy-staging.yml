@@ -14,9 +14,9 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: us-east-2
+  AWS_REGION: ${{ vars.AWS_REGION }}
   ECR_REPOSITORY: stg-chico-backend
-  EKS_CLUSTER_NAME: stg-chico-eks
+  EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
   DEPLOYMENT_NAME: ezops-backend
   CONTAINER_NAME: backend
   NAMESPACE: stg-chico
@@ -37,8 +37,12 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActionsSession
+
+      # - name: AWS Identity Check (Troubleshooting)
+      #   run: aws sts get-caller-identity
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -77,8 +81,12 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActionsSession
+
+      # - name: AWS Identity Check (Troubleshooting)
+      #   run: aws sts get-caller-identity
 
       - name: Update Kubeconfig
         run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
@@ -142,8 +150,12 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActionsSession
+
+      # - name: AWS Identity Check (Troubleshooting)
+      #   run: aws sts get-caller-identity
 
       - name: Sync Assets (Cache Forever)
         run: |

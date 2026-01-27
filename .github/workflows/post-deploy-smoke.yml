@@ -11,17 +11,17 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: us-east-2
-  EKS_CLUSTER_NAME: stg-chico-eks
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
   NAMESPACE: observability
-  GRAFANA_URL: https://obs-ezops.gratianovem.com.br/
+  GRAFANA_URL: ${{ vars.GRAFANA_URL || 'https://obs-ezops.gratianovem.com.br/' }}
 
 jobs:
   post-deploy-smoke:
     name: Post-Deploy Smoke Test
     runs-on: ubuntu-latest
-    # Added environment to access AWS_ROLE_ARN and other vars/secrets
-    environment: staging
+    # Dynamic environment based on the triggering workflow
+    environment: ${{ (github.event.workflow_run.name == 'Deploy Production' && 'production') || 'staging' }}
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout Code
@@ -30,9 +30,12 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          # Using the same Role as the deploy workflows
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActionsSession
+
+      # - name: AWS Identity Check (Troubleshooting)
+      #   run: aws sts get-caller-identity
 
       - name: Update Kubeconfig
         run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}

@@ -10,8 +10,8 @@ metadata:
     # SSL / HTTPS
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
     alb.ingress.kubernetes.io/ssl-redirect: '443'
-    # TODO: Replace with REGIONAL ACM ARN (us-east-2) for api.chico.exam.ezopscloud.tech
-    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-2:REPLACE_WITH_VALID_ARN"
+    # TODO: Replace with REGIONAL ACM ARN (us-east-1) for api.chico.exam.ezopscloud.tech
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:654654369899:certificate/a68a75b2-35c9-4331-8faf-cc3040c1ee0a"
     # Health checks
     alb.ingress.kubernetes.io/healthcheck-path: /health
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: "30"
@@ -20,8 +20,7 @@ metadata:
     alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
 spec:
   rules:
-    # Staging Domain: api.chico.exam.ezopscloud.tech 
-    # (Matches what you will configure in Cloudflare CNAME to point to ALB)
+    # Production Domain: api.chico.exam.ezopscloud.tech 
     - host: api.chico.exam.ezopscloud.tech
       http:
         paths:

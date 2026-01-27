@@ -1,13 +1,13 @@
 variable "region" {
   description = "AWS Region"
   type        = string
-  default     = "us-east-2"
+  default     = "us-east-1"
 }
 
 variable "profile" {
   description = "AWS CLI Profile"
   type        = string
-  default     = "default"
+  default     = "hrclsfss"
 }
 
 variable "vpc_cidr" {
@@ -19,7 +19,7 @@ variable "vpc_cidr" {
 variable "azs" {
   description = "Availability Zones"
   type        = list(string)
-  default     = ["us-east-2a", "us-east-2b"]
+  default     = ["us-east-1a", "us-east-1b"]
 }
 
 variable "public_subnets" {
@@ -68,13 +68,19 @@ variable "dns_label" {
   default     = "chico"
 }
 
+variable "cloudfront_aliases" {
+  description = "Alternate domain names (CNAMEs) for CloudFront"
+  type        = list(string)
+  default     = []
+}
+
 variable "backend_target" {
   description = "ALB DNS Name for Backend (from K8s Service/Ingress)"
   type        = string
   default     = ""
 }
 
-variable "production_acm_arn" {
+variable "cloudfront_acm_arn" {
   description = "ARN of an existing ACM Certificate for CloudFront (Frontend) in us-east-1"
   type        = string
   default     = "" # TO BE FILLED

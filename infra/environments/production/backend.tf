@@ -7,11 +7,11 @@ terraform {
     # 3. Replace the PLACEHOLDERS below with your specific values.
     # -------------------------------------------------------------------------
 
-    bucket         = "ezops-tfstate-563702590660-us-east-2"
-    key            = "staging/terraform.tfstate"
-    region         = "us-east-2"
-    dynamodb_table = "ezops-tflock-563702590660"
+    bucket         = "test-chico-tfstate-654654369899-us-east-1"
+    key            = "production/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "test-chico-tflock-654654369899"
     encrypt        = true
-    profile        = "chico"
+    profile        = "hrclsfss"
   }
 }

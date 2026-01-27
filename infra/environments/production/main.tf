@@ -67,18 +67,18 @@ module "cloudfront" {
 
   # Custom Domain (Production)
   # Uses Route53 alias if enabled, or ACM
-  aliases             = ["chico.exam.ezopscloud.tech"]
-  acm_certificate_arn = var.production_acm_arn # Provided by variable or created
+  aliases             = var.cloudfront_aliases
+  acm_certificate_arn = var.cloudfront_acm_arn
 }
 
 module "route53" {
   source = "../../modules/route53"
 
-  enabled         = true # Enable Route53 for Production
+  enabled         = var.hosted_zone_id != "" # Enable only if zone ID is provided
   hosted_zone_id  = var.hosted_zone_id
   domain_name     = "chico.exam.ezopscloud.tech"
   frontend_target = module.cloudfront.distribution_domain_name
-  backend_target  = "k8s-ingress-alb..." # Requires data source lookup in real scenario
+  backend_target  = var.backend_target
   tags            = var.tags
 }
 
