@@ -93,18 +93,31 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD || vars.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET || vars.JWT_SECRET || '64a6dc0caab4000ca4eff6daee52843c' }}
         run: |
+          # --- SMART SANITIZATION ---
+          # Se os segredos estiverem vazios ou com o placeholder "DB_USER", usamos o padrão da infra.
+          
+          FINAL_DB_USER="${{ env.DB_USER }}"
+          if [ "$FINAL_DB_USER" = "DB_USER" ] || [ -z "$FINAL_DB_USER" ]; then
+            FINAL_DB_USER="postgres"
+          fi
+          
+          FINAL_DB_NAME="${{ env.DB_NAME }}"
+          if [ "$FINAL_DB_NAME" = "DB_NAME" ] || [ -z "$FINAL_DB_NAME" ]; then
+            FINAL_DB_NAME="blog"
+          fi
+
           # Apply ConfigMaps & Secrets & Deployments
           kubectl apply -f k8s/production/namespace.yaml
           kubectl apply -f k8s/production/backend/configmap.yaml
           
           kubectl create secret generic backend-secrets \
             --namespace ${{ env.NAMESPACE }} \
-            --from-literal=DB_HOST="$DB_HOST" \
-            --from-literal=DB_NAME="$DB_NAME" \
-            --from-literal=DB_PORT="$DB_PORT" \
-            --from-literal=DB_USER="$DB_USER" \
-            --from-literal=DB_PASSWORD="$DB_PASSWORD" \
-            --from-literal=JWT_SECRET="$JWT_SECRET" \
+            --from-literal=DB_HOST="${{ env.DB_HOST }}" \
+            --from-literal=DB_NAME="$FINAL_DB_NAME" \
+            --from-literal=DB_PORT="${{ env.DB_PORT }}" \
+            --from-literal=DB_USER="$FINAL_DB_USER" \
+            --from-literal=DB_PASSWORD="${{ env.DB_PASSWORD }}" \
+            --from-literal=JWT_SECRET="${{ env.JWT_SECRET }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
           kubectl apply -f k8s/production/backend/deployment.yaml
