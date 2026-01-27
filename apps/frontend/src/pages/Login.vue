@@ -1,30 +1,44 @@
 <template>
-  <div class="login">
-    <div class="main">
-      <div class="header">Вход</div>
-      <div class="content">
-        <label for="email">E-mail</label>
-        <input id="email" type="text" v-model="email">
+  <div class="login-page">
+    <div class="login-container">
+      <UiPageHeader title="Welcome Back" subtitle="Please login to your account" />
+      
+      <UiCard>
+        <div class="login-form">
+          <div class="field">
+            <label for="email">E-mail</label>
+            <input id="email" type="email" v-model="email" placeholder="Enter your email">
+          </div>
 
-        <label for="password">password</label>
-        <input id="password" type="password" v-model="password" @keyup.enter="makeLogin">
-      </div>
-      <div class="buttons">
-        <button @click="makeLogin">login</button>
-      </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" type="password" v-model="password" @keyup.enter="makeLogin" placeholder="Enter your password">
+          </div>
 
-      <div class="error" v-if="error">
-        {{ error }}
-      </div>
+          <div class="actions">
+            <button class="btn btn-full" @click="makeLogin">Login</button>
+          </div>
+
+          <div class="error-msg" v-if="error">
+            {{ error }}
+          </div>
+        </div>
+      </UiCard>
     </div>
   </div>
 </template>
 
 <script>
 import { AuthService } from '@/services/auth.service'
+import UiPageHeader from '@/components/UiPageHeader.vue'
+import UiCard from '@/components/UiCard.vue'
 
 export default {
   name: 'Login',
+  components: {
+    UiPageHeader,
+    UiCard
+  },
   data () {
     return {
       email: 'user@user.com',
@@ -50,38 +64,33 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.login {
-  width: 100%;
-  height: 70%;
+.login-page {
   display: flex;
   justify-content: center;
   align-items: center;
+  min-height: 60vh;
+  
+  .login-container {
+    width: 100%;
+    max-width: 440px;
+  }
 
-  .main {
-    padding: 30px 15px;
-    background: #fff;
-    width: 400px;
-    border-radius: 2px;
-    box-shadow: 0 11px 15px -7px rgba(0, 0, 0, .2),
-    0 24px 38px 3px rgba(0, 0, 0, .14),
-    0 9px 46px 8px rgba(0, 0, 0, .12);
+  .login-form {
+    padding: 10px 0;
+  }
 
-    .header {
-      text-align: center;
-    }
+  .btn-full {
+    width: 100%;
+  }
 
-    .buttons {
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    .error {
-      background-color: red;
-      padding: 10px;
-      font-size: 12px;
-      opacity: 1;
-      transition: all 0.5s;
-    }
+  .error-msg {
+    margin-top: 20px;
+    padding: 12px;
+    background-color: rgba(#e01b3c, 0.1);
+    color: #e01b3c;
+    border-radius: 6px;
+    font-size: 14px;
+    text-align: center;
   }
 }
 </style>

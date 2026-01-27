@@ -2,7 +2,7 @@ name: Post-Deploy Smoke Test
 
 on:
   workflow_run:
-    workflows: ["Deploy Staging", "Deploy Production"]
+    workflows: ["Deploy Staging"]
     types:
       - completed
 
@@ -15,11 +15,11 @@ jobs:
     name: Post-Deploy Smoke Test
     runs-on: ubuntu-latest
     # Dynamic environment based on the triggering workflow
-    environment: ${{ (github.event.workflow_run.name == 'Deploy Production' && 'production') || 'staging' }}
+    environment: staging
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     env:
-      AWS_REGION: ${{ vars.AWS_REGION || secrets.AWS_REGION || (github.event.workflow_run.name == 'Deploy Production' && 'us-east-1') || 'us-east-2' }}
-      EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME || secrets.EKS_CLUSTER_NAME || (github.event.workflow_run.name == 'Deploy Production' && 'test-chico-eks') || 'stg-chico-eks' }}
+      AWS_REGION: ${{ vars.AWS_REGION || secrets.AWS_REGION || 'us-east-2' }}
+      EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME || secrets.EKS_CLUSTER_NAME || 'stg-chico-eks' }}
       NAMESPACE: observability
       GRAFANA_URL: ${{ vars.GRAFANA_URL || secrets.GRAFANA_URL || 'https://obs-ezops.gratianovem.com.br/' }}
     steps:

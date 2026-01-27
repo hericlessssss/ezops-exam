@@ -1,12 +1,14 @@
 <template>
   <div id="app">
-    <AppHeader></AppHeader>
-    <div class="wrapper">
-      <transition name="fade">
-        <router-view></router-view>
-      </transition>
-    </div>
-    <AppFooter></AppFooter>
+    <AppHeader />
+    <main class="main-content">
+      <div class="wrapper">
+        <transition name="fade" mode="out-in">
+          <router-view></router-view>
+        </transition>
+      </div>
+    </main>
+    <AppFooter />
   </div>
 
 </template>

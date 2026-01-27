@@ -1,46 +1,54 @@
 <template>
-  <div class="home page">
-    <h1>{{ msg }}</h1>
-    <button @click="isShownModal = true">show modal</button>
-    <button @click="showToast">show toast</button>
-    <UiModal closeOnOverlay :show.sync="isShownModal">
-      <div class="some-modal-content">
-        hi here
-        <div class="buttons">
-          <button @click="submitModalHandler">ok</button>
+  <div class="home-page">
+    <UiPageHeader title="Welcome to Index!!!" subtitle="Explore our components and features" />
+
+    <UiCard title="Interactive Elements">
+      <div class="buttons-row">
+        <button class="btn" @click="isShownModal = true">show modal</button>
+        <button class="btn btn-secondary" @click="showToast">show toast</button>
+      </div>
+
+      <UiModal closeOnOverlay :show.sync="isShownModal">
+        <div class="some-modal-content">
+          <h3>Modal Example</h3>
+          <p>This is a standardized modal content area.</p>
+          <div class="buttons">
+            <button class="btn" @click="submitModalHandler">ok</button>
+          </div>
         </div>
+      </UiModal>
+
+      <div class="icon-section">
+        <UiBaseIcon width="40px" height="40px" color="#e01b3c" iconName="done" @click="onClickIcon"/>
       </div>
-    </UiModal>
+    </UiCard>
 
-    <UiBaseIcon width="40px" height="40px" color="blue" iconName="done" @click="onClickIcon"/>
+    <UiCard title="Form Controls">
+      <UiInputText
+        v-model="msg"
+        placeholder="Enter message"
+        label="Message Input"
+        @blur="onBlur"
+        @keyup.enter="onEnter"
+        @keyup.esc="onEsc"
+        :error="inputError">
+        <div slot="bottom">This is a very important description helper text.</div>
+      </UiInputText>
 
-    <UiInputText
-      v-model="msg"
-      placeholder="Enter message"
-      label="Enter message"
-      someHelloProp="hello"
-      @blur="onBlur"
-      @keyup.enter="onEnter"
-      @keyup.esc="onEsc"
-      :error="inputError">
-      <div slot="before">
-        <UiBaseIcon iconName="done"/>
+      <div class="checkbox-section">
+        <UiCheckbox label="Accept Terms" v-model="checkboxState"/>
       </div>
-      <div slot="after">
-        <UiBaseIcon iconName="write"/>
-      </div>
-      <div slot="bottom">This is very important description</div>
-    </UiInputText>
+    </UiCard>
 
-    <UiCheckbox value="hello checkbox" v-model="checkboxState"/>
-
-    <br><br>
-    <UiPaginationOffset :offset.sync="pagination.offset" :limit="pagination.limit" :total="pagination.total"/>
-
+    <UiCard title="Navigation Controls">
+      <UiPaginationOffset :offset.sync="pagination.offset" :limit="pagination.limit" :total="pagination.total"/>
+    </UiCard>
   </div>
 </template>
 
 <script>
+import UiPageHeader from '@/components/UiPageHeader.vue'
+import UiCard from '@/components/UiCard.vue'
 import UiModal from '@/components/UiModal.vue'
 import UiBaseIcon from '@/components/icons/UiBaseIcon.vue'
 import UiInputText from '@/components/UiInputText.vue'
@@ -51,6 +59,8 @@ export default {
   name: 'IndexPage',
 
   components: {
+    UiPageHeader,
+    UiCard,
     UiModal,
     UiBaseIcon,
     UiInputText,
@@ -99,13 +109,35 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.some-modal-content {
-  min-width: 400px;
-  padding: 25px;
+.home-page {
+  .buttons-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
 
-  .buttons button {
-    padding: 10px;
-    margin: 10px;
+  .icon-section {
+    margin-top: 24px;
+  }
+
+  .checkbox-section {
+    margin-top: 20px;
+  }
+
+  .some-modal-content {
+    padding: 24px;
+    
+    h3 {
+      margin-top: 0;
+    }
+    
+    .buttons {
+      margin-top: 24px;
+      display: flex;
+      justify-content: flex-end;
+    }
   }
 }
+
+// Button styles are now global in _global.scss
 </style>

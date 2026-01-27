@@ -7,20 +7,19 @@
     </div>
 
     <div class="data-box-content is-empty" v-if="isEmpty && !error && !loading">
-      <div class="smile">(O_o)</div>
-      <div class="title">No content!</div>
+      <UiEmptyState />
     </div>
 
     <div class="data-box-content error" v-if="error">
-      <div class="smile">(O_o)</div>
-      <div class="title">Something wrong here!</div>
-      <div class="error-msg">{{ error }}</div>
+      <UiErrorState :message="error" @retry="$emit('retry')" />
     </div>
   </div>
 </template>
 
 <script>
 import SpinnerWave from './progress-loaders/UiSpinnerWave.vue'
+import UiEmptyState from './UiEmptyState.vue'
+import UiErrorState from './UiErrorState.vue'
 
 export default {
   name: 'DataBox',
@@ -38,7 +37,11 @@ export default {
       default: false
     }
   },
-  components: { SpinnerWave }
+  components: {
+    SpinnerWave,
+    UiEmptyState,
+    UiErrorState
+  }
 }
 </script>
 

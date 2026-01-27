@@ -1,21 +1,15 @@
 <template>
-  <div class="news-page-container">
-    <div class="header-section">
-      <h1>EzOps News</h1>
-      <p class="subtitle">Stay updated with the latest in Cloud & DevOps</p>
-    </div>
+  <div class="news-page">
+    <UiPageHeader title="EzOps News" subtitle="Stay updated with the latest in Cloud & DevOps" />
 
     <div class="news-list">
-      <DataBox :loading="loading" :isEmpty="isEmpty" :error="error">
-        <div class="news-card" v-for="item in news" :key="item.id">
-          <div class="card-header">
-            <h2>{{item.title}}</h2>
-            <!-- Date could be added here if available -->
-          </div>
-          <div class="card-body">
-            <div class="news-content" v-html="item.content"></div>
-          </div>
-        </div>
+      <DataBox :loading="loading" :isEmpty="isEmpty" :error="error" @retry="fetchData">
+        <UiCard v-for="item in news" :key="item.id">
+          <template #header>
+            <h2 class="news-title">{{item.title}}</h2>
+          </template>
+          <div class="news-content" v-html="item.content"></div>
+        </UiCard>
       </DataBox>
     </div>
   </div>
@@ -26,12 +20,16 @@ import { PostsService } from '@/services/posts.service'
 import prepareQueryParamsMixin from '../../mixins/prepareQueryParamsMixin'
 import prepareFetchParamsMixin from '../../mixins/prepareFetchParamsMixin'
 import DataBox from '../../components/DataBox'
+import UiPageHeader from '@/components/UiPageHeader.vue'
+import UiCard from '@/components/UiCard.vue'
 
 export default {
   name: 'NewsPage',
   mixins: [prepareQueryParamsMixin, prepareFetchParamsMixin],
   components: {
-    DataBox
+    DataBox,
+    UiPageHeader,
+    UiCard
   },
   props: {
     limit: { type: Number, default: 10 },
@@ -101,58 +99,15 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.news-page-container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 40px 20px;
-  background-color: #f8f9fa;
-  min-height: 100vh;
-}
-
-.header-section {
-  text-align: center;
-  margin-bottom: 50px;
-
-  h1 {
-    font-size: 3rem;
-    color: #2c3e50;
-    margin-bottom: 10px;
-    font-weight: 700;
+.news-page {
+  .news-list {
+    margin-top: 20px;
   }
 
-  .subtitle {
-    font-size: 1.2rem;
-    color: #7f8c8d;
-    font-weight: 300;
-  }
-}
-
-.news-card {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  margin-bottom: 40px;
-  overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-  }
-
-  .card-header {
-    padding: 30px 40px 10px 40px;
-    
-    h2 {
-      font-size: 2rem;
-      color: #34495e;
-      margin: 0;
-      line-height: 1.3;
-    }
-  }
-
-  .card-body {
-    padding: 10px 40px 40px 40px;
+  .news-title {
+    font-size: 24px;
+    color: #333;
+    margin: 0;
   }
 }
 
@@ -174,22 +129,6 @@ export default {
     object-fit: cover; /* Ensures image covers area or containment */
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  }
-}
-
-@media (max-width: 768px) {
-  .news-page-container {
-    padding: 20px 15px;
-  }
-  
-  .news-card {
-    .card-header, .card-body {
-      padding: 20px;
-    }
-
-    h2 {
-      font-size: 1.5rem;
-    }
   }
 }
 </style>

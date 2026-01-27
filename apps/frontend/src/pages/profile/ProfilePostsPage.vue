@@ -1,11 +1,18 @@
 <template>
-  <div class="posts">
-    <div class="list">
-      <div class="loading" v-if="!posts.length"><h1>loading...</h1></div>
-      <div class="item" v-for="item in posts" :key="item.id">
-        {{item.title}}
+  <div class="profile-posts">
+    <DataBox :loading="loading" :isEmpty="isEmpty" :error="error" @retry="fetchData">
+      <div class="posts-grid">
+        <UiCard v-for="item in posts" :key="item.id">
+          <div class="post-item">
+            <h3 class="post-title">{{item.title}}</h3>
+            <div class="post-actions">
+              <button class="btn btn-secondary btn-sm">View</button>
+              <button class="btn btn-secondary btn-sm">Edit</button>
+            </div>
+          </div>
+        </UiCard>
       </div>
-    </div>
+    </DataBox>
   </div>
 </template>
 
@@ -13,9 +20,15 @@
 import { PostsService } from '@/services/posts.service'
 import prepareQueryParamsMixin from '../../mixins/prepareQueryParamsMixin'
 import prepareFetchParamsMixin from '../../mixins/prepareFetchParamsMixin'
+import DataBox from '../../components/DataBox'
+import UiCard from '@/components/UiCard.vue'
 
 export default {
   name: 'ProfilePostsPage',
+  components: {
+    DataBox,
+    UiCard
+  },
 
   props: {
     limit: { type: Number, default: 10 },
