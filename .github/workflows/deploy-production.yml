@@ -1,9 +1,9 @@
-name: Deploy Production
+name: Deploy Production (DISABLED)
 
 on:
-  workflow_dispatch:
-  release:
-    types: [published]
+#  workflow_dispatch:
+#  release:
+#    types: [published]
 
 permissions:
   id-token: write

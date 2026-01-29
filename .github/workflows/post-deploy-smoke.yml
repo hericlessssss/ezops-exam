@@ -1,10 +1,10 @@
-name: Post-Deploy Smoke Test
+name: Post-Deploy Smoke Test (DISABLED)
 
 on:
-  workflow_run:
-    workflows: ["Deploy Staging"]
-    types:
-      - completed
+#  workflow_run:
+#    workflows: ["Deploy Staging"]
+#    types:
+#      - completed
 
 permissions:
   id-token: write

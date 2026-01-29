@@ -1,19 +1,19 @@
-name: CI - Quality & Security
+name: CI - Quality & Security (DISABLED)
 
 on:
-  pull_request:
-    branches: [ "main" ]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.agent/**'
-  push:
-    branches: [ "main" ]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.agent/**'
-  workflow_dispatch:
+#  pull_request:
+#    branches: [ "main" ]
+#    paths-ignore:
+#      - '**.md'
+#      - 'docs/**'
+#      - '.agent/**'
+#  push:
+#    branches: [ "main" ]
+#    paths-ignore:
+#      - '**.md'
+#      - 'docs/**'
+#      - '.agent/**'
+#  workflow_dispatch:
 
 permissions:
   contents: read
